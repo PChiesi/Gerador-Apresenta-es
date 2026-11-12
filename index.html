@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de Apresentações</title>
+<meta name="description" content="Monte prompts completos para criar apresentações executivas com IA: slides, imagens em alta resolução e gráficos editáveis no PowerPoint.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%233D4ED8'/%3E%3Cpath d='M6 17V11M10 17V7M14 17v-4M18 17V9' stroke='white' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+<style>
+:root{
+  --paper:#F5F6FA; --surface:#FFFFFF; --tint:#EEF0FC; --line:#DCDFEA; --line-strong:#C2C7D8;
+  --ink:#161A2B; --muted:#5B6075;
+  --acc:#3D4ED8; --acc-hover:#2F3DB8; --acc-2:#7C8CFF; --acc-soft:#E2E6FF;
+  --azul:#24308F; --azul-claro:#0E9FA3; --azul-soft:#DDF3F4;
+  --erro:#C21B35; --erro-soft:#FDE4E8; --aviso:#8A5300; --aviso-soft:#FFF1D6;
+  --on-acc:#FFFFFF;
+  --f-display:"Plus Jakarta Sans","Inter",Arial,sans-serif;
+  --f-body:"Inter",Arial,sans-serif;
+  --shadow:0 1px 2px rgba(22,26,43,.05),0 10px 28px rgba(22,26,43,.07);
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E1020; --surface:#161931; --tint:#1E2242; --line:#292E52; --line-strong:#3A406E;
+  --ink:#E8EAF7; --muted:#A3A8C8;
+  --acc:#8D9BFF; --acc-hover:#A8B3FF; --acc-2:#B6BEFF; --acc-soft:#262C5E;
+  --azul:#B9C3FF; --azul-claro:#4FD0D3; --azul-soft:#123638;
+  --erro:#FF7D8F; --erro-soft:#40182A; --aviso:#F2B65A; --aviso-soft:#3A2C14;
+  --on-acc:#0E1020; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.28);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E1020; --surface:#161931; --tint:#1E2242; --line:#292E52; --line-strong:#3A406E;
+  --ink:#E8EAF7; --muted:#A3A8C8;
+  --acc:#8D9BFF; --acc-hover:#A8B3FF; --acc-2:#B6BEFF; --acc-soft:#262C5E;
+  --azul:#B9C3FF; --azul-claro:#4FD0D3; --azul-soft:#123638;
+  --erro:#FF7D8F; --erro-soft:#40182A; --aviso:#F2B65A; --aviso-soft:#3A2C14;
+  --on-acc:#0E1020; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.28);
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 var(--f-body)}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.15}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* Botões: sempre com borda, ícone e área de clique clara */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;border:1.5px solid var(--line-strong);background:var(--surface);padding:9px 15px;font-weight:600;font-size:.92rem;line-height:1.1;cursor:pointer;color:var(--ink);transition:background .15s,border-color .15s,color .15s,transform .1s}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn:active{transform:translateY(1px) scale(.98)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.btn.primary:hover{background:var(--acc-hover);border-color:var(--acc-hover);color:var(--on-acc)}
+.btn.small{padding:6px 11px;font-size:.84rem;border-radius:8px}
+.btn.icone{padding:6px;width:32px;height:32px}
+.btn.perigo:hover{border-color:var(--erro);color:var(--erro)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.btn:disabled:hover{border-color:var(--line-strong);color:var(--ink)}
+.btn svg{width:17px;height:17px;flex:none}
+
+header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.top-in{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 20px}
+.brand{display:flex;gap:10px;align-items:center;margin-right:auto}
+.brand b{display:block;font-family:var(--f-display);font-size:1.15rem}
+.brand span{font-size:.8rem;color:var(--muted)}
+.mark{width:36px;height:36px;border-radius:9px;background:var(--acc);display:grid;place-items:center;flex:none}
+.mark svg{width:20px;height:20px}
+.top select{width:auto;border:1.5px solid var(--line-strong);border-radius:8px;padding:6px 10px;background:var(--surface);max-width:230px;font-weight:600;font-size:.88rem}
+.salvo{display:inline-flex;gap:6px;align-items:center;font-size:.8rem;color:var(--muted);margin-right:4px}
+.salvo i{width:8px;height:8px;border-radius:50%;background:var(--acc-2)}
+
+main{display:grid;grid-template-columns:minmax(440px,1fr) minmax(380px,.9fr);gap:24px;padding:24px;max-width:1600px;margin:0 auto}
+#form section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--shadow);animation:entra .45s var(--ease) both}
+#form section:nth-child(2){animation-delay:.06s} #form section:nth-child(3){animation-delay:.12s} #form section:nth-child(4){animation-delay:.18s}
+#form h2{font-size:1.45rem;display:flex;gap:12px;align-items:center;margin-bottom:4px}
+.passo{width:34px;height:34px;border-radius:50%;background:var(--tint);color:var(--acc);font:700 1rem/1 var(--f-display);display:grid;place-items:center;flex:none}
+#form .desc{color:var(--muted);margin:0 0 18px 46px}
+@keyframes entra{from{opacity:0;transform:translateY(10px)}}
+
+.campo{margin-bottom:14px}
+.campo>label{display:block;font-weight:600;font-size:.9rem;margin-bottom:5px}
+.dica{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+input[type=text],input[type=password],textarea,select{width:100%;background:var(--surface);border:1.5px solid var(--line-strong);border-radius:10px;padding:9px 12px;line-height:1.45;transition:border-color .15s}
+textarea{resize:vertical}
+input[type=text]:focus,input[type=password]:focus,textarea:focus,select:focus{border-color:var(--acc);outline:2px solid var(--acc-soft);outline-offset:0}
+.linha3{display:grid;grid-template-columns:1fr 1fr 170px;gap:12px}
+.linha2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.com-mic{position:relative}
+.com-mic textarea{padding-bottom:46px}
+.com-mic .mic{position:absolute;right:8px;bottom:8px}
+.mic.on{background:var(--erro-soft);border-color:var(--erro);color:var(--erro)}
+.mic.on svg{animation:pulsa 1s ease-in-out infinite}
+@keyframes pulsa{50%{opacity:.3}}
+
+.slide{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;background:var(--surface);transition:border-color .2s}
+.slide:focus-within{border-color:var(--acc)}
+.slide.novo{animation:entra .35s var(--ease) both}
+.slide-topo{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-bottom:6px}
+.slide-topo .n{font-weight:700;font-size:.85rem;color:var(--on-acc);background:var(--acc);border-radius:7px;padding:5px 10px;font-variant-numeric:tabular-nums}
+.slide-topo .sels{display:flex;gap:8px;min-width:0}
+.slide-topo .sels select{flex:1;min-width:0;padding:7px 10px}
+.slide-topo .acoes{display:flex;gap:4px}
+.slide>.dica{margin:0 0 10px}
+.imagens{display:grid;gap:8px;justify-items:start;padding-top:4px}
+.rotulo-img{font-weight:600;font-size:.9rem}
+.img-item{justify-self:stretch;border:1.5px dashed var(--line-strong);border-radius:12px;padding:10px 12px 0}
+.img-topo{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.img-topo .arq{font-size:.84rem;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg{display:inline-flex;border:1.5px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.seg label{position:relative;padding:6px 12px;cursor:pointer;font-weight:600;font-size:.84rem;transition:background .15s,color .15s}
+.seg label+label{border-left:1.5px solid var(--line-strong)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--acc);color:var(--on-acc)}
+.seg label:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:-3px}
+.graf-item{padding-bottom:0}
+.graf-item .linha2 .campo{margin-bottom:10px}
+.rot-fonte{font-weight:600;font-size:.86rem}
+.tab-ed{overflow-x:auto;margin-bottom:12px}
+.tab-ed table{border-collapse:separate;border-spacing:4px}
+.tab-ed input[type=text]{padding:6px 9px;border-radius:7px;min-width:96px;font-variant-numeric:tabular-nums}
+.tab-ed td:first-child input,.tab-ed th:first-child input{min-width:170px}
+.tab-ed thead input[type=text]{font-weight:600;background:var(--tint)}
+.tab-ed .th{display:flex;gap:4px;align-items:center}
+.tab-acoes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.btn.mini{padding:4px;width:28px;height:28px;border-radius:7px}
+.btn.mini svg{width:14px;height:14px}
+.plan-sel{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chips label{display:inline-flex;gap:6px;align-items:center;border:1.5px solid var(--line-strong);border-radius:99px;padding:5px 12px;font-size:.84rem;font-weight:600;cursor:pointer}
+.chips label:has(input:checked){border-color:var(--acc);background:var(--tint);color:var(--acc)}
+.chips input{accent-color:var(--acc);margin:0}
+.tab-prev{border-collapse:collapse;font-size:.84rem;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.tab-prev th,.tab-prev td{text-align:left;padding:4px 12px 4px 0;border-bottom:1px solid var(--line)}
+.tab-prev th{color:var(--muted);font-weight:600}
+.plan{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.plan b{display:block}
+.plan .dica{max-width:520px}
+.plan .btn{margin-left:auto}
+.vazio{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.ia{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border:1.5px solid var(--acc-soft);background:var(--tint);border-radius:14px;padding:12px 14px;margin-bottom:14px}
+.ia .dica{flex:1 1 220px}
+.dl-acoes{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+dialog a{color:var(--acc);font-weight:600}
+.arq.baixa{color:var(--erro);font-weight:600}
+.paletas{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:12px}
+.paleta{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;position:relative;transition:border-color .15s,background .15s}
+.paleta:hover{border-color:var(--line-strong)}
+.paleta:has(input:checked){border-color:var(--acc);background:var(--tint)}
+.paleta:has(input:focus-visible){outline:2px solid var(--acc);outline-offset:2px}
+.paleta input{position:absolute;opacity:0;pointer-events:none}
+.amostra{display:flex;gap:4px}
+.amostra i{width:22px;height:22px;border-radius:6px;border:1px solid var(--line-strong)}
+input[type=color]{width:100%;height:42px;border:1.5px solid var(--line-strong);border-radius:10px;padding:4px;background:var(--surface);cursor:pointer}
+.add-slide{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:2px dashed var(--line-strong);border-radius:14px;padding:12px}
+.add-slide select{width:auto;min-width:220px}
+
+.modos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.modo{border:1.5px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:border-color .15s,background .15s}
+.modo:hover{border-color:var(--line-strong)}
+.modo:has(input:checked){border-color:var(--acc);background:var(--tint)}
+.modo input,.opcoes input{accent-color:var(--acc);width:18px;height:18px;margin:2px 0 0;flex:none}
+.modo b{display:block}
+.tpl{border:2px dashed var(--line-strong);border-radius:14px;padding:14px;animation:entra .3s var(--ease) both}
+.tpl-acoes{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tpl-acoes select{width:auto;min-width:200px}
+.tpl-info{margin-top:12px;font-size:.9rem}
+.tpl-info .cores{display:flex;gap:5px;margin:0 0 8px}
+.tpl-info .cores span{width:24px;height:24px;border-radius:6px;border:1px solid var(--line-strong)}
+.opcoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.opcoes label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;transition:border-color .15s,background .15s}
+.opcoes label:hover{border-color:var(--line-strong)}
+.opcoes label:has(input:checked){border-color:var(--acc);background:var(--tint)}
+.opcoes b{display:block;font-weight:600}
+
+#preview{position:sticky;top:84px;align-self:start;height:calc(100vh - 108px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;animation:entra .45s .1s var(--ease) both}
+.prev-topo{display:flex;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.prev-topo h2{font-size:1.1rem}
+.prev-topo span{color:var(--muted);font-size:.82rem;margin-left:auto;border-radius:99px;padding:3px 10px;background:var(--tint)}
+.prev-topo span.flash{animation:flash .8s ease-out}
+@keyframes flash{from{background:var(--acc-soft);color:var(--acc)}}
+#saida{flex:1;overflow:auto;padding:20px 24px;white-space:pre-wrap;font:14px/1.6 var(--f-body);margin:0}
+#saida b{color:var(--azul)}
+#saida .sl{display:block;margin-top:6px;padding-top:12px;border-top:1px dashed var(--line);color:var(--acc)}
+.prev-acoes{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px;border-top:1px solid var(--line);background:var(--paper)}
+
+#aviso{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:12px;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s,transform .25s var(--ease);max-width:calc(100vw - 32px);z-index:20}
+#aviso.on{opacity:1;transform:translate(-50%,0)}
+
+dialog{border:none;border-radius:16px;max-width:700px;width:calc(100% - 32px);padding:0;background:var(--surface);color:var(--ink);box-shadow:0 12px 32px rgba(0,0,0,.25)}
+dialog[open]{animation:abre .25s var(--ease)}
+@keyframes abre{from{opacity:0;transform:translateY(12px) scale(.98)}}
+dialog::backdrop{background:rgba(13,24,18,.5)}
+dialog .dl{padding:26px 30px;max-height:78vh;overflow:auto}
+dialog h2{color:var(--acc);font-size:1.5rem;margin-bottom:10px}
+dialog h3{margin:18px 0 4px;font-size:1.05rem;color:var(--azul)}
+dialog p{margin:4px 0}
+dialog .dl-pe{padding:12px 30px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+
+@media (max-width:1500px){ .salvo{display:none} }
+.galeria .desc{margin-left:0!important}
+.cards-ex{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.card-ex{display:flex;flex-direction:column;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 10px 12px;cursor:pointer;font-weight:600;font-size:.85rem;line-height:1.25;color:var(--ink);text-align:center;transition:border-color .15s,transform .15s,background .15s}
+.card-ex:hover{border-color:var(--acc);transform:translateY(-2px)}
+.card-ex.ativo{border-color:var(--acc);background:var(--tint)}
+.card-ex svg{width:72px;height:54px;color:var(--acc)}
+.card-ex .f{fill:var(--acc-soft)} .card-ex .b{fill:var(--surface)}
+#form section:nth-child(5){animation-delay:.24s} #form section:nth-child(6){animation-delay:.3s}
+.prev-topo .pendentes{margin-left:auto;background:var(--aviso-soft);color:var(--aviso);font-weight:600}
+.prev-topo .pendentes:not([hidden]) + span{margin-left:0}
+@media (max-width:640px){ .cards-ex{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:1100px){ main{grid-template-columns:1fr} #preview{position:static;height:75vh} }
+@media (max-width:640px){
+  main{padding:12px;gap:12px} .top-in{padding:10px 12px} #form section{padding:16px}
+  .linha3,.linha2,.modos,.opcoes,.plan-sel{grid-template-columns:1fr} #form .desc{margin-left:0}
+  .slide-topo{grid-template-columns:auto 1fr} .slide-topo .acoes{grid-column:1/-1;justify-content:flex-end} .slide-topo .sels{flex-direction:column}
+  .top .rotulo-btn{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M7 13l3-3 2 2 4-4"/></svg></div>
+      <div><b>Gerador de Apresentações</b><span>Prompts para slides executivos com IA · gráficos editáveis</span></div>
+    </div>
+    <span class="salvo"><i></i>Salvo neste navegador</span>
+    <select id="produto" aria-label="Apresentação carregada"></select>
+    <button class="btn small" id="bSalvar" data-ico="salvar"><span class="rotulo-btn">Salvar</span></button>
+    <button class="btn small perigo" id="bExcluir" data-ico="lixo"><span class="rotulo-btn">Excluir</span></button>
+    <button class="btn small" id="bExportar" data-ico="baixar"><span class="rotulo-btn">Exportar</span></button>
+    <button class="btn small" id="bImportar" data-ico="subir"><span class="rotulo-btn">Importar</span></button>
+    <input type="file" id="arquivo" accept=".json,application/json" hidden>
+    <button class="btn small icone" id="bTema" data-ico="lua" aria-label="Alternar tema claro ou escuro" title="Tema claro ou escuro"></button>
+    <button class="btn small primary" id="bManual" data-ico="livro">Manual</button>
+  </div>
+</header>
+
+<main>
+  <div id="form"></div>
+  <aside id="preview">
+    <div class="prev-topo"><h2>Prompt gerado</h2><span id="pendentes" class="pendentes" hidden></span><span id="contagem"></span></div>
+    <pre id="saida" tabindex="0" aria-label="Prompt gerado"></pre>
+    <div class="prev-acoes">
+      <button class="btn primary" id="bCopiar" data-ico="copiar">Copiar prompt</button>
+      <button class="btn" id="bBaixar" data-ico="baixar">Baixar .txt</button>
+      <button class="btn" id="bPptx" data-ico="grafico" title="Gera um .pptx com seus textos e os gráficos já editáveis">Rascunho .pptx</button>
+    </div>
+  </aside>
+</main>
+<div id="aviso" role="status"></div>
+
+<dialog id="manual">
+  <div class="dl">
+    <h2>Como usar</h2>
+    <p>Você escreve o conteúdo e a ferramenta monta um prompt completo para a IA criar a apresentação: o visual, as regras de qualidade, a composição de cada tipo de slide, as imagens e os gráficos. O prompt aparece à direita e muda enquanto você digita. Funciona no Copilot do PowerPoint, no ChatGPT, no Claude, no Gemini ou em qualquer IA que gere arquivos .pptx.</p>
+
+    <h3>Exemplos prontos</h3>
+    <p>No topo há quatro exemplos: resultados trimestrais, proposta de projeto, lançamento de produto e status de projeto. Clique num cartão para carregar. Os exemplos não têm números reais: onde precisa de um dado aparece um marcador entre colchetes, como [X]% ou [cliente]. Um aviso amarelo acima do prompt conta quantos faltam. Troque cada um pelo valor verdadeiro ou apague o trecho, porque a IA não deve receber colchetes.</p>
+
+    <h3>1. Sobre a apresentação</h3>
+    <p>Preencha o título e, se quiser, o nome da empresa, a área e a classificação do documento (uso interno, confidencial). O nome da empresa entra na capa e no rodapé. O público define o tom e o objetivo define como a apresentação termina. Em "Onde vai usar o prompt", escolha o Copilot do PowerPoint ou um chat de IA que gera o arquivo: as instruções de gráfico mudam conforme a ferramenta. Em "Contexto", conte a história como contaria a um colega. Em "Números já alcançados", um número por linha: a IA usa só esses e não inventa outros.</p>
+
+    <h3>2. Planilhas de dados</h3>
+    <p>Se os números estão numa planilha, clique em "Importar planilha" e escolha um arquivo do Excel (.xlsx) ou um .csv. Cada aba com dados entra na lista. O arquivo é lido no seu navegador e não é enviado a lugar nenhum. Ao importar de novo um arquivo com o mesmo nome, os gráficos ligados a ele passam a usar os números novos. Arquivos .xls antigos precisam ser salvos antes como .xlsx.</p>
+
+    <h3>3. Slides</h3>
+    <p>Cada slide tem um tipo (capa, tese em pilares, indicadores, portfólio, próximos passos, comparativo, recomendação ou livre), e o tipo já diz à IA como desenhar o slide. Você escreve o que ele precisa dizer, digitando ou ditando. O título é opcional: vazio, a IA propõe um que antecipe a conclusão. Use as setas para mudar a ordem.</p>
+
+    <h3>Montar slides com IA</h3>
+    <p>Com o título e o contexto preenchidos, "Montar slides com IA" pede ao Claude uma estrutura completa de slides, com textos, sugestões de imagem e gráficos quando houver dados. Na primeira vez, clique em "Configurar IA" e cole a sua chave da API da Anthropic (crie em console.anthropic.com). A chave fica só neste navegador e a chamada vai direto do navegador para a Anthropic, sem passar por nenhum servidor nosso. O uso é cobrado na sua conta da Anthropic. Os slides que a IA devolve substituem os atuais e podem ser editados como qualquer outro.</p>
+
+    <h3>Imagens</h3>
+    <p>Em cada slide, "Adicionar imagem" pede o papel da imagem: "Fundo do slide" ocupa o slide inteiro, atrás do texto, e "Parte do slide" entra ao lado do texto. Se você tem a imagem, escolha o arquivo: a ferramenta mede a resolução e avisa se ela for baixa (o ideal é 3840 × 2160 px para fundo e pelo menos 1600 px de largura para o resto). Anexe o arquivo na IA junto com o prompt; a lista "Imagens anexadas" mostra quais. Sem arquivo, descreva a imagem e a IA gera ou escolhe uma em alta resolução.</p>
+
+    <h3>Gráficos editáveis</h3>
+    <p>Em cada slide, "Adicionar gráfico" cria um gráfico de colunas, barras, pizza ou linha. Em "Digitar", preencha a tabela (rótulos na primeira coluna, valores nas outras) ou cole as células direto do Excel. "Adicionar série" cria mais uma coluna, para comparar realizado e meta, por exemplo. Em "Da planilha", escolha a planilha importada, a coluna dos rótulos e as colunas dos valores. "Editar estes dados" copia os números para a tabela digitada.</p>
+    <p>O prompt exige gráfico nativo do PowerPoint, com os dados na planilha do próprio gráfico, e proíbe imagem de gráfico. Para conferir, clique com o botão direito no gráfico: se aparecer "Editar Dados", ele é editável. Se a IA insistir em imagem, use o "Rascunho .pptx".</p>
+
+    <h3>Rascunho .pptx</h3>
+    <p>O botão "Rascunho .pptx", embaixo do prompt, gera na hora um arquivo do PowerPoint com seus títulos, textos e todos os gráficos já nativos e editáveis, nas cores escolhidas. Serve para copiar os gráficos para a apresentação final ou como ponto de partida. Precisa de internet só para carregar o gerador de arquivos.</p>
+
+    <h3>Ditado por voz</h3>
+    <p>Clique em "Ditar" no campo e fale; o texto entra no fim do campo. Clique de novo para parar. Funciona no Chrome e no Edge, com internet. Na primeira vez, o navegador pede permissão para usar o microfone. Se aparecer "microfone bloqueado", libere no ícone ao lado do endereço da página.</p>
+
+    <h3>4. Visual</h3>
+    <p>Em "Estilo pronto", escolha uma das paletas ou "Cores da minha empresa" para informar a cor principal, a cor de destaque e a fonte. Em "Template da empresa", envie o seu .pptx ou .potx: a ferramenta lê as cores do tema, as fontes, o tamanho e os nomes dos layouts, e cada slide ganha um campo "Layout do template". No Copilot, abra o próprio template no PowerPoint e cole o prompt ali. Num chat de IA, anexe o template junto com o prompt.</p>
+
+    <h3>5. Opções</h3>
+    <p>Marque o que deve entrar: notas do apresentador, rodapé com empresa e classificação, checklist e as demais. O nome do arquivo é opcional. "Instruções adicionais" vai para o fim do prompt do jeito que você escrever.</p>
+
+    <h3>Salvar e compartilhar</h3>
+    <p>Tudo o que você digita fica salvo neste navegador. "Salvar" guarda a apresentação com um nome, para reusar depois. "Exportar" gera um arquivo .json para mandar a outra pessoa, que abre com "Importar". O template e as planilhas vão junto. O botão com a lua troca entre tema claro e escuro.</p>
+  </div>
+  <div class="dl-pe"><button class="btn primary" id="bFechar">Entendi</button></div>
+</dialog>
+
+<dialog id="dlgIA">
+  <form method="dialog" class="dl">
+    <h2>Configurar IA</h2>
+    <p>O "Montar slides com IA" usa a API do Claude, da Anthropic. Crie uma chave em <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> e cole abaixo. A chave fica só neste navegador e cada chamada vai direto para a Anthropic. O uso é cobrado na sua conta.</p>
+    <div class="campo"><label for="iaChave">Chave da API</label><input type="password" id="iaChave" autocomplete="off" placeholder="sk-ant-..."></div>
+    <div class="campo"><label for="iaModelo">Modelo</label>
+      <select id="iaModelo">
+        <option value="claude-opus-5-5">Claude Opus 5.5 (melhor qualidade)</option>
+        <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (mais rápido)</option>
+        <option value="claude-haiku-5-5">Claude Haiku 5.5 (mais barato)</option>
+      </select></div>
+    <div class="dl-acoes"><button class="btn perigo" value="apagar" id="iaApagar">Apagar chave</button><button class="btn primary" value="salvar" id="iaSalvar">Salvar</button></div>
+  </form>
+</dialog>
+
+
+<script id="engine">
+// Motor puro: estado (+ template) -> prompt; leitura de template .pptx e de planilhas; pedido à IA. Testado em test/engine.test.js.
+const has = v => Array.isArray(v) ? v.some(has) : (v !== false && v != null && String(v).trim() !== '');
+const clean = a => (a || []).filter(has);
+const q = s => has(s) ? '“' + String(s).trim().replace(/^[“"]+|[”"]+$/g, '') + '”' : '';
+const bl = (...p) => p.flat().filter(has).join('\n\n');
+const lst = a => clean(a).map(x => '- ' + x).join('\n');
+const num = a => clean(a).map((x, i) => `${i+1}. ${x}`).join('\n');
+const lab = (l, v) => has(v) ? `${l}\n${v}` : '';
+const sec = (t, body) => has(body) ? `${t}\n\n${body}` : '';
+
+const PUBLICOS = {
+  board:     {nome:'Board Executivo (Vice-Presidência, Diretoria e Superintendência)', tom:'Executivo, direto, comercialmente convincente e orientado a resultado, adequado para Vice-Presidência e Board. Linguagem de negócio, não de projeto. Seguro, sem exagerar benefícios ainda não comprovados.'},
+  diretoria: {nome:'Diretoria', tom:'Executivo e objetivo, com foco em resultado, riscos e prioridades. Linguagem de negócio, sem detalhe operacional.'},
+  comite:    {nome:'Comitê técnico ou de produto', tom:'Objetivo e fundamentado, com mais evidência técnica, mantendo a conclusão clara em cada slide.'},
+  gestores:  {nome:'Gestores e equipes', tom:'Claro e prático, com foco no que muda, em quem é responsável e nos próximos passos.'}
+};
+const OBJETIVOS = {
+  decisao:   {nome:'Obter uma decisão ou patrocínio', fecho:'O último slide termina com uma chamada clara à decisão: o que se pede, a quem e o que muda a partir dela. Nada de pedido genérico.'},
+  avanco:    {nome:'Mostrar avanço e próximos passos', fecho:'A apresentação deixa claro o que já foi feito, o que vem a seguir e o que depende do público.'},
+  proposta:  {nome:'Propor uma iniciativa nova', fecho:'A apresentação sustenta por que fazer, o valor potencial, o esforço necessário e a decisão para começar.'},
+  resultado: {nome:'Apresentar resultados alcançados', fecho:'A apresentação separa resultado realizado de potencial e mostra o que fazer para sustentar ou ampliar o ganho.'}
+};
+const ESTRUTURAS = {
+  capa:         {nome:'Capa', dica:'Kicker, subtítulo, identificação da área e a imagem que você imagina.',
+                 instr:'Capa com título forte, kicker curto, subtítulo e mensagem principal. Identificação da área e data no rodapé da capa.'},
+  pilares:      {nome:'Tese em pilares', dica:'As 3 ou 4 frentes da tese: nome, mensagem e o que cada uma abrange.',
+                 instr:'Cards horizontais numerados, um por pilar, cada um com nome, mensagem curta e abrangência em poucas palavras. Uma cor por pilar. Se houver lógica de priorização ou fórmula, colocá-la numa faixa na parte inferior.'},
+  indicadores:  {nome:'Indicadores e avanço', dica:'Os números (com rótulo e complemento), a mudança que eles mostram e as etapas.',
+                 instr:'Indicadores grandes (número em destaque, rótulo e complemento) com muito espaço em branco e um destaque lateral com a implicação. Se houver etapas, uma linha de progresso horizontal com status por cor: verde para concluído, âmbar para em andamento, cor de destaque para a próxima prioridade e cinza para etapa futura. Sem cronograma detalhado. Leitura em menos de 20 segundos.'},
+  categorias:   {nome:'Portfólio em categorias', dica:'As categorias, uma descrição curta, exemplos e o resultado esperado de cada.',
+                 instr:'Um card por categoria, uma cor por categoria, com descrição curta, poucos exemplos usados só como evidência e o resultado esperado. Faixa inferior com a regra ou princípio que vale para todas. Não transformar em lista operacional.'},
+  timeline:     {nome:'Próximos passos e decisão', dica:'As etapas, a entrega esperada e o que você pede ao público.',
+                 instr:'Timeline horizontal limpa com as etapas, a última destacada com a cor de destaque. Abaixo, um bloco com a entrega esperada e outro com o direcionamento pedido ao público.'},
+  comparativo:  {nome:'Comparativo', dica:'Os dois lados (antes e depois, ou opção A e B) e os critérios.',
+                 instr:'Duas colunas com os mesmos critérios lado a lado (antes × depois ou opção A × opção B) e a conclusão destacada embaixo.'},
+  recomendacao: {nome:'Recomendação', dica:'O que você recomenda, por quê, os riscos e a decisão pedida.',
+                 instr:'Recomendação no título, até três razões com evidência, principais riscos com mitigação e a decisão solicitada em destaque.'},
+  livre:        {nome:'Livre', dica:'Descreva o que o slide precisa dizer.',
+                 instr:'Escolha a composição visual mais clara para o conteúdo, com uma ideia principal.'}
+};
+// Imagens por slide: fundo (atrás do conteúdo) ou parte do slide (dentro da composição).
+const USO_IMG = {
+  fundo:'Fundo do slide (de ponta a ponta, atrás do conteúdo, com overlay escuro e caixa translúcida para o texto continuar legível)',
+  conteudo:'Parte do slide (dentro da composição, ao lado do texto, alinhada ao grid e sem cobrir textos)'
+};
+const RES_IMG = {fundo:'3840 × 2160 px (16:9, mínimo 1920 × 1080)', conteudo:'pelo menos 1600 px no lado maior, na proporção do espaço que ocupa'};
+const IMG_MIN = {fundo:1920, conteudo:1600}; // largura mínima recomendada, usada no aviso de baixa resolução
+const IMG_REGRA = [
+  'Use imagens só nos slides e no papel indicados (fundo ou parte do slide).',
+  'Imagens em alta resolução: fundo de slide com 3840 × 2160 px (mínimo 1920 × 1080) e imagens dentro do slide com pelo menos 1600 px no lado maior. Nítidas, sem compressão visível, sem marca d’água e sem pixelização ao projetar.',
+  'Ajuste cada imagem cortando, nunca esticando: a proporção original se mantém.',
+  'Imagens geradas ou escolhidas: fotografia premium, realista e editorial, com luz natural e profundidade de campo, sem textos, números ou logotipos dentro da imagem, sem pessoas em primeiro plano, sem ícones flutuantes e sem elementos futuristas exagerados.'
+];
+const imgs = sl => (sl.imagens || []).filter(im => has(im.arquivo) || has(im.descricao));
+const semPonto = t => String(t).trim().replace(/\.+$/, '');
+const imgTxt = im => `- ${USO_IMG[im.uso] || USO_IMG.conteudo}: ${[
+  has(im.arquivo) && 'use a imagem anexada ' + q(im.arquivo) + (im.largura ? ` (${im.largura} × ${im.altura} px)` : ''),
+  has(im.descricao) && (has(im.arquivo) ? semPonto(im.descricao) : `gere ou escolha uma fotografia de ${semPonto(im.descricao)}, em ${RES_IMG[im.uso] || RES_IMG.conteudo}`)
+].filter(Boolean).join('. ')}.`;
+
+// Gráficos por slide: dados digitados no próprio gráfico (tabela) ou ligados a uma planilha importada (s.planilhas).
+const TIPOS_GRAF = {
+  colunas:{nome:'Colunas', ppt:'Colunas Agrupadas (Clustered Column)', py:'COLUMN_CLUSTERED', instr:'Gráfico de colunas verticais'},
+  barras: {nome:'Barras', ppt:'Barras Agrupadas (Clustered Bar)', py:'BAR_CLUSTERED', instr:'Gráfico de barras horizontais, da maior para a menor'},
+  pizza:  {nome:'Pizza', ppt:'Rosca (Doughnut)', py:'DOUGHNUT', instr:'Gráfico de rosca com o percentual em cada fatia, no máximo 6 fatias (agrupe as menores em “Outros”)'},
+  linha:  {nome:'Linha', ppt:'Linhas com Marcadores (Line with Markers)', py:'LINE_MARKERS', instr:'Gráfico de linha com marcadores nos pontos'}
+};
+const DESTINOS = {
+  copilot:{nome:'Copilot no PowerPoint', entrega:'Crie os slides diretamente na apresentação aberta no PowerPoint.',
+           graf:'Crie cada gráfico pelo recurso de gráfico do PowerPoint (Inserir > Gráfico) e preencha a planilha que abre com ele.'},
+  chat:   {nome:'Chat de IA que gera o arquivo (ChatGPT, Claude, Gemini, Copilot Chat)',
+           entrega:'Gere o arquivo .pptx completo com código (python-pptx ou outra biblioteca que crie objetos nativos do PowerPoint) e entregue o arquivo para download, não só o roteiro.',
+           graf:'Como o arquivo será gerado com código, use python-pptx e crie cada gráfico com slide.shapes.add_chart(XL_CHART_TYPE.<tipo>, x, y, cx, cy, chart_data), montando chart_data com CategoryChartData() (categorias e uma série por coluna de valores). O tipo python-pptx de cada gráfico está indicado nele. Nunca use matplotlib, plotly, seaborn ou imagem PNG para gráficos.'}
+};
+function tabelaGraf(g, planilhas){
+  if (g.fonte === 'planilha') {
+    const p = (planilhas || []).find(x => x.nome === g.planilha);
+    if (!p) return null;
+    const cols = [g.colRotulo, ...(g.colValores || [])].map(c => p.colunas.indexOf(c));
+    if (cols.length < 2 || cols.includes(-1)) return null;
+    return {colunas: cols.map(c => p.colunas[c]), linhas: p.linhas.map(l => cols.map(c => l[c] ?? '')).filter(l => has(l[0]))};
+  }
+  const t = g.tabela || {colunas:[], linhas:[]};
+  return {colunas: t.colunas, linhas: t.linhas.filter(has)};
+}
+function grafTxt(g, s){
+  const t = tabelaGraf(g, s.planilhas);
+  if (!t || t.colunas.length < 2 || !t.linhas.length) return '';
+  const n = g.tipo === 'pizza' ? 2 : t.colunas.length; // pizza tem uma série só
+  const tipo = TIPOS_GRAF[g.tipo] || TIPOS_GRAF.colunas;
+  return [`- ${tipo.instr}${has(g.titulo) ? ', com o título ' + q(g.titulo) : ''}.`,
+    `  Tipo no PowerPoint: ${tipo.ppt}${s.meta.destino === 'chat' ? `; no python-pptx: XL_CHART_TYPE.${tipo.py}` : ''}.`,
+    has(g.unidade) && `  Unidade dos valores: ${semPonto(g.unidade)}.`,
+    has(g.descricao) && `  Destaque: ${semPonto(g.descricao)}.`,
+    `  Dados (${t.colunas.slice(0, n).map(c => String(c).trim() || '—').join(' | ')}):`,
+    ...t.linhas.map(l => '  ' + l.slice(0, n).map(v => String(v ?? '').trim() || '—').join(' | '))].filter(Boolean).join('\n');
+}
+const grafs = (sl, s) => (sl.graficos || []).map(g => grafTxt(g, s)).filter(Boolean);
+function regrasGraf(s, cores){
+  return lst([
+    'Cada gráfico listado nos slides é um objeto de gráfico nativo do PowerPoint, com os dados na planilha embutida do próprio gráfico e editáveis em “Editar Dados”.',
+    'Proibido: imagem de gráfico, captura de tela, SVG, ícone ou formas desenhadas imitando barras, fatias ou linhas.',
+    'Use o tipo indicado em cada gráfico e exatamente os valores informados, sem completar, arredondar nem estimar.',
+    'Os valores entram na planilha do gráfico como números, não como texto: 48% vira 0,48 com formato de porcentagem e “R$ 1.234,5” vira 1234,5 com formato de moeda. Valor entre colchetes fica com a célula vazia.',
+    'Rótulos de dados visíveis no mesmo formato dos valores; legenda só com mais de uma série, embaixo do gráfico; eixo de valores começando em zero nas colunas e barras; linhas de grade leves ou nenhuma; sem 3D, sombra, brilho ou gradiente.',
+    `Cores das séries, nesta ordem: ${cores.join(', ')}. Na rosca, uma cor por fatia, na mesma ordem.`,
+    'Quando o slide já tem título, o título do gráfico fica como texto do slide. Textos do gráfico na mesma fonte do slide, com pelo menos 10 pt.',
+    (DESTINOS[s.meta.destino] || DESTINOS.copilot).graf
+  ]);
+}
+
+// Estilos prontos. "personalizada" usa visual.cor1 (principal), visual.cor2 (destaque) e visual.fonte.
+const PALETAS = {
+  consultoria:{nome:'Consultoria', desc:'Azul-marinho, vermelho de destaque, fundo branco.', estrutural:'#0B1F3A', destaque:'#E4002B',
+    apoio:['#2E5C8A','#00A19A','#F2A900','#7A869A'], fundo:'#FFFFFF', fundo2:'#F4F6F9', texto:'#1F2430', texto2:'#667085', linha:'#D9DEE7', fonteT:'Aptos Display', fonteC:'Aptos'},
+  moderno:    {nome:'Moderno escuro', desc:'Fundo grafite, azul elétrico e ciano.', estrutural:'#E8ECF4', destaque:'#4F7DFF',
+    apoio:['#22D3EE','#A78BFA','#F5B342','#94A3B8'], fundo:'#0E1424', fundo2:'#172036', texto:'#F1F4FA', texto2:'#9AA6BF', linha:'#2A3550', fonteT:'Segoe UI Semibold', fonteC:'Segoe UI'},
+  minimalista:{nome:'Minimalista', desc:'Preto e branco com um laranja de destaque.', estrutural:'#111111', destaque:'#FF5A1F',
+    apoio:['#555555','#8C8C8C','#BDBDBD','#2B2B2B'], fundo:'#FFFFFF', fundo2:'#F5F5F3', texto:'#141414', texto2:'#6B6B6B', linha:'#E2E2E0', fonteT:'Arial', fonteC:'Arial'},
+  natural:    {nome:'Sóbrio verde', desc:'Verde-escuro, verde vivo e areia.', estrutural:'#14352B', destaque:'#2FA36B',
+    apoio:['#8BBF9F','#C9A86A','#4C6A92','#6B7B73'], fundo:'#FFFFFF', fundo2:'#F3F6F2', texto:'#1D2A24', texto2:'#5E6E66', linha:'#DCE4DD', fonteT:'Georgia', fonteC:'Aptos'},
+  personalizada:{nome:'Cores da minha empresa', desc:'Você escolhe a cor principal, a cor de destaque e a fonte.'}
+};
+function paletaDe(v, tpl){
+  const b = PALETAS.consultoria;
+  if (tpl) {
+    const cor = papel => (tpl.cores.find(c => c.papel === papel) || {}).hex, ac = tpl.cores.filter(c => /^Destaque/.test(c.papel)).map(c => c.hex);
+    return {...b, estrutural: cor('Escuro 2') || cor('Escuro 1') || b.estrutural, destaque: ac[0] || b.destaque, apoio: ac.length > 1 ? ac.slice(1) : b.apoio,
+            fonteT: tpl.fontes?.titulo || b.fonteT, fonteC: tpl.fontes?.texto || b.fonteC};
+  }
+  if (v.paleta !== 'personalizada') return PALETAS[v.paleta] || b;
+  const f = has(v.fonte) ? v.fonte.trim() : '';
+  return {...b, estrutural: v.cor1 || b.estrutural, destaque: v.cor2 || b.destaque, fonteT: f || b.fonteT, fonteC: f || b.fonteC};
+}
+const coresSeries = p => [p.estrutural, p.destaque, ...p.apoio];
+const visualPadrao = p => [
+  'Formato widescreen 16:9 (13,333 × 7,5 polegadas).',
+  'Estilo de consultoria estratégica de alto padrão: limpo, premium e pragmático, com muito espaço em branco e uma ideia por slide.',
+  `Fundo ${p.fundo}, com ${p.fundo2} para faixas e cards. Cor estrutural ${p.estrutural} para títulos, números e elementos principais; destaque ${p.destaque} só no que precisa chamar atenção; cores de apoio ${p.apoio.join(', ')} para diferenciar cards, categorias e séries.`,
+  `Texto principal ${p.texto}, texto secundário ${p.texto2}, linhas e divisórias ${p.linha}. Contraste mínimo de 4,5:1 entre texto e fundo.`,
+  `Fonte ${p.fonteT} nos títulos e ${p.fonteC} no texto (se não existirem, use Aptos ou Calibri). Títulos de 28 a 36 pt, mensagens de 16 a 20 pt, apoio de 11 a 14 pt, nada abaixo de 10 pt. Negrito só em mensagens críticas.`,
+  'Grid consistente: margens de 0,5 polegada e os mesmos alinhamentos e espaçamentos em todos os slides.',
+  'Kicker pequeno no topo, título à esquerda, takeaway em destaque, linha divisória sutil, conteúdo no centro e rodapé discreto.'
+];
+const VISUAL_COMUM = [
+  'Usar cards, indicadores numéricos grandes, círculos numerados, linhas de progressão, timelines, faixas de takeaway e ícones minimalistas de traço único.',
+  'Evitar slides cheios de bullets, caixas cinzas pesadas, sombras pesadas, efeito 3D, gradientes chamativos, clip-art, engrenagens, lâmpadas, alvos, aperto de mãos e cara de template genérico.',
+  'Todos os textos e elementos editáveis. Nenhum slide feito como imagem única.'
+];
+const REGRAS = [
+  'Use apenas os números e fatos informados. Não invente valores financeiros, percentuais, volumes ou benefícios.',
+  'Separe resultado alcançado de impacto potencial e não afirme que ganhos já foram realizados.',
+  'Para impacto ainda não medido, use expressões como “impacto potencial”, “hipótese de valor”, “benefício a ser dimensionado” e “estimativa em construção”.'
+];
+
+const nomeArquivo = m => `${(m.titulo || 'Apresentação').trim()}${has(m.data) ? ' - ' + m.data.trim() : ''}.pptx`;
+
+function visualTemplate(t, ...regras){
+  return bl(`Use o template ${q(t.nome)}, aberto no PowerPoint ou anexado. Não altere o tema, as cores nem as fontes do template.`,
+    lst([
+      has(t.tamanho) && `Tamanho do slide: ${t.tamanho}.`,
+      has(t.cores) && `Cores do tema: ${t.cores.map(c => `${c.papel} ${c.hex}`).join(', ')}. Use a cor de destaque principal para ênfase e as demais para diferenciar cards e categorias.`,
+      (has(t.fontes?.titulo) || has(t.fontes?.texto)) && `Fontes: ${[has(t.fontes.titulo) && 'títulos em ' + t.fontes.titulo, has(t.fontes.texto) && 'texto em ' + t.fontes.texto].filter(Boolean).join(', ')}.`,
+      has(t.layouts) && `Layouts disponíveis: ${t.layouts.join('; ')}. Use o layout indicado em cada slide; sem indicação, escolha o mais adequado.`,
+      ...regras,
+      ...VISUAL_COMUM
+    ]));
+}
+
+function slideTexto(sl, i, s, tpl){
+  const e = ESTRUTURAS[sl.estrutura] || ESTRUTURAS.livre;
+  return bl(`SLIDE ${i} – ${e.nome.toUpperCase()}`,
+    lab('Composição:', e.instr),
+    tpl && has(sl.layout) && lab('Layout do template:', q(sl.layout)),
+    has(sl.titulo) ? lab('Título:', sl.titulo) : (s.opcoes.tituloConclusao && 'Título: proponha um título curto que antecipe a conclusão do slide.'),
+    lab('Conteúdo:', sl.conteudo),
+    sl.estrutura === 'capa' && has(s.meta.empresa) && `Identificação: ${q(s.meta.empresa)} na capa, em tamanho discreto.`,
+    imgs(sl).length > 0 && 'Imagens:\n' + imgs(sl).map(imgTxt).join('\n'),
+    grafs(sl, s).length > 0 && 'Gráficos:\n' + grafs(sl, s).join('\n'));
+}
+
+function buildPrompt(s, template){
+  const m = s.meta, o = s.opcoes, n = s.slides.length;
+  const pub = PUBLICOS[m.publico] || PUBLICOS.board, obj = OBJETIVOS[m.objetivo] || OBJETIVOS.decisao;
+  const tpl = s.visual.modo === 'template' && template ? template : null;
+  const pal = paletaDe(s.visual, tpl), dest = DESTINOS[m.destino] || DESTINOS.copilot;
+  const quem = [m.area, m.empresa].filter(has).map(x => x.trim()).join(', ');
+  const parc = has(m.parceiro) ? ` em parceria com ${m.parceiro.trim()}` : '';
+  const temImg = s.slides.some(sl => imgs(sl).length), temGraf = s.slides.some(sl => grafs(sl, s).length);
+  const regrasImg = temImg ? IMG_REGRA : ['Sem fotografias.'];
+  const anexos = s.slides.flatMap((sl, i) => imgs(sl).filter(im => has(im.arquivo))
+    .map(im => `${q(im.arquivo)}: slide ${i + 1}, ${im.uso === 'fundo' ? 'fundo do slide' : 'parte do slide'}`));
+  const checklist = [
+    `A apresentação tem exatamente ${n} slides.`,
+    tpl ? 'O template foi respeitado em todos os slides.' : 'O arquivo está em 16:9.',
+    'Todos os elementos são editáveis.',
+    temImg && 'Cada imagem está no slide e no papel indicados, em alta resolução, sem distorção e sem cobrir textos.',
+    temGraf && 'Cada gráfico é nativo: ao clicar com o botão direito aparece “Editar Dados”, e os valores são exatamente os informados.',
+    'Não há textos cortados nem elementos fora da área do slide.',
+    o.naoInventar && 'Nenhum número foi inventado e o resultado alcançado está separado do impacto potencial.',
+    'Cada slide tem uma conclusão executiva.',
+    'O último slide cumpre o objetivo da apresentação.',
+    'O visual é consistente em todos os slides.',
+    'O arquivo abre normalmente no Microsoft PowerPoint.'
+  ];
+  return bl(
+    semPonto(`Crie uma apresentação executiva em PowerPoint sobre ${q(m.titulo)}${quem ? ', conduzida por ' + quem : ''}${parc}`) + '.',
+    `Público: ${pub.nome}.\nObjetivo: ${obj.nome}.`,
+    sec('MENSAGEM CENTRAL', q(m.mensagem)),
+    sec('CONTEXTO', m.contexto),
+    sec('DADOS DISPONÍVEIS', has(m.numeros) && bl(lst(m.numeros), o.naoInventar && 'Apresente estes números como resultado já alcançado.')),
+    sec('IMAGENS ANEXADAS', anexos.length > 0 && `Anexei ${anexos.length === 1 ? 'esta imagem' : 'estas imagens'} junto com o prompt. Use cada uma no slide e no papel indicados:\n${lst(anexos)}`),
+    sec(`ESTRUTURA: ${n} SLIDES`, bl(`Construa exatamente ${n} slides, nesta ordem.`,
+      o.tituloConclusao && 'Cada slide deve ter:\n- Título que antecipa a conclusão, nunca um título só descritivo.\n- Um takeaway claramente visível.\n- Pouco texto e uma composição visual principal.\n- Hierarquia clara entre mensagem, evidência e implicação.')),
+    s.slides.map((sl, i) => slideTexto(sl, i + 1, s, tpl)),
+    temGraf && sec('GRÁFICOS EDITÁVEIS (OBRIGATÓRIO)', regrasGraf(s, coresSeries(pal))),
+    sec('VISUAL', tpl ? visualTemplate(tpl, ...regrasImg) : lst([...visualPadrao(pal), ...regrasImg, ...VISUAL_COMUM])),
+    sec('TOM', pub.tom),
+    o.naoInventar && sec('REGRAS DE CONTEÚDO', lst(REGRAS)),
+    sec('FECHAMENTO', obj.fecho),
+    o.notas && sec('NOTAS DO APRESENTADOR', 'Inclua em cada slide notas do apresentador com 3 a 5 frases do que falar, sem repetir o texto do slide.'),
+    o.rodape && sec('RODAPÉ', lst([has(m.classificacao) && q(m.classificacao), has(m.empresa) && q(m.empresa), 'Numeração do slide'])),
+    sec('INSTRUÇÕES ADICIONAIS', m.extras),
+    o.checklist && sec('CONTROLE DE QUALIDADE', `Antes de entregar, verifique:\n${num(checklist)}`),
+    sec('ENTREGA', dest.entrega),
+    `Entregue o arquivo com o nome: ${q(has(m.arquivo) ? m.arquivo : nomeArquivo(m))}`
+  );
+}
+
+// Números de tabela para o rascunho .pptx: "1.234,5" -> 1234.5; "48%" -> 0.48 (pct); "[X]" -> null.
+function numero(v){
+  let t = String(v ?? '').trim();
+  if (!/\d/.test(t) || /\[/.test(t)) return null;
+  const pct = t.includes('%');
+  t = t.replace(/[^\d,.\-]/g, '');
+  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = Number(t);
+  return isNaN(n) ? null : pct ? n / 100 : n;
+}
+function dadosGraf(g, planilhas){
+  const t = tabelaGraf(g, planilhas);
+  if (!t || t.colunas.length < 2 || !t.linhas.length) return null;
+  const cols = g.tipo === 'pizza' ? 2 : t.colunas.length;
+  const labels = t.linhas.map(l => String(l[0]).trim());
+  const series = t.colunas.slice(1, cols).map((nome, k) => ({name: String(nome).trim() || 'Série ' + (k + 1), labels, values: t.linhas.map(l => numero(l[k + 1]))}));
+  return {tipo: g.tipo in TIPOS_GRAF ? g.tipo : 'colunas', titulo: g.titulo || '', series,
+          pct: t.linhas.some(l => l.slice(1, cols).some(v => String(v).includes('%'))), vazios: series.reduce((a, x) => a + x.values.filter(v => v == null).length, 0)};
+}
+
+// ---- Leitura de template .pptx/.potx (zip) sem biblioteca ----
+async function lerZip(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf), dec = new TextDecoder();
+  let eocd = -1;
+  for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65557); i--)
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('O arquivo não é um .pptx ou .potx válido.');
+  const arq = {};
+  let p = dv.getUint32(eocd + 16, true);
+  for (let k = 0, total = dv.getUint16(eocd + 10, true); k < total && dv.getUint32(p, true) === 0x02014b50; k++) {
+    const nl = dv.getUint16(p + 28, true);
+    arq[dec.decode(u8.subarray(p + 46, p + 46 + nl))] = {metodo: dv.getUint16(p + 10, true), tam: dv.getUint32(p + 20, true), off: dv.getUint32(p + 42, true)};
+    p += 46 + nl + dv.getUint16(p + 30, true) + dv.getUint16(p + 32, true);
+  }
+  const ler = async nome => {
+    const a = arq[nome]; if (!a) return null;
+    const ini = a.off + 30 + dv.getUint16(a.off + 26, true) + dv.getUint16(a.off + 28, true), dados = u8.subarray(ini, ini + a.tam);
+    if (a.metodo === 0) return dec.decode(dados);
+    return new Response(new Blob([dados]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  };
+  return {ler, nomes: Object.keys(arq)};
+}
+const xmlTxt = s => s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+const PAPEIS = {dk1:'Escuro 1', lt1:'Claro 1', dk2:'Escuro 2', lt2:'Claro 2', accent1:'Destaque 1', accent2:'Destaque 2', accent3:'Destaque 3', accent4:'Destaque 4', accent5:'Destaque 5', accent6:'Destaque 6'};
+
+async function lerTemplate(buf, nomeArq){
+  const z = await lerZip(buf);
+  const pres = await z.ler('ppt/presentation.xml');
+  if (!pres) throw new Error('O arquivo não parece ser uma apresentação do PowerPoint.');
+  const sz = pres.match(/<p:sldSz\b[^>]*?cx="(\d+)"[^>]*?cy="(\d+)"/);
+  const pol = v => (v / 914400).toLocaleString('pt-BR', {maximumFractionDigits: 2});
+  const rels = await z.ler('ppt/slideMasters/_rels/slideMaster1.xml.rels') || '';
+  const tm = rels.match(/Target="\.\.\/theme\/(theme\d+\.xml)"/);
+  const tema = await z.ler('ppt/theme/' + (tm ? tm[1] : 'theme1.xml')) || '';
+  const cores = Object.entries(PAPEIS).map(([k, papel]) => {
+    const r = tema.match(new RegExp(`<a:${k}>\\s*<a:(?:srgbClr val="([0-9A-Fa-f]{6})"|sysClr[^>]*?lastClr="([0-9A-Fa-f]{6})")`));
+    return r && {papel, hex: '#' + (r[1] || r[2]).toUpperCase()};
+  }).filter(Boolean);
+  const fonte = tag => xmlTxt((tema.match(new RegExp(`<a:${tag}>\\s*<a:latin typeface="([^"]*)"`)) || [])[1] || '');
+  const nomesLayout = z.nomes.filter(n => /^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(n)).sort((a, b) => a.match(/\d+/)[0] - b.match(/\d+/)[0]);
+  const layouts = [];
+  for (const n of nomesLayout) {
+    const r = (await z.ler(n) || '').match(/<p:cSld\b[^>]*?name="([^"]*)"/);
+    if (r && !layouts.includes(xmlTxt(r[1]))) layouts.push(xmlTxt(r[1]));
+  }
+  return {nome: nomeArq.replace(/\.(pptx|potx|pptm|potm)$/i, ''), tamanho: sz ? `${pol(sz[1])} × ${pol(sz[2])} polegadas` : '',
+          cores, fontes: {titulo: fonte('majorFont'), texto: fonte('minorFont')}, layouts};
+}
+
+// ---- Leitura de planilha .xlsx (mesmo leitor de zip) ou .csv. Resultado: [{nome, colunas, linhas}] ----
+const LIM_LINHAS = 2000; // shortcut: corta planilhas maiores para caber no armazenamento do navegador; se precisar, filtrar antes no Excel
+const attr = (tag, nome) => xmlTxt((tag.match(new RegExp(`(?:^|\\s)${nome}="([^"]*)"`)) || [])[1] || '');
+const colIdx = ref => [...ref.replace(/\d+/g, '')].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
+const fmtNum = n => n.toLocaleString('pt-BR', {maximumFractionDigits: Math.abs(n) < 1 ? 4 : 2, useGrouping: Math.abs(n) >= 10000});
+
+function tabelaDe(nome, grade){
+  grade = grade.filter(l => l.some(has));
+  if (!grade.length) return null;
+  const usadas = grade.flatMap(l => l.map((v, k) => has(v) ? k : -1)).filter(k => k >= 0);
+  const ini = Math.min(...usadas), fim = Math.max(...usadas), cab = grade[0];
+  const colunas = [];
+  for (let k = ini; k <= fim; k++) {
+    const c = has(cab[k]) ? String(cab[k]).trim() : 'Coluna ' + (k + 1);
+    colunas.push(colunas.includes(c) ? `${c} (${k + 1})` : c);
+  }
+  return {nome, colunas, linhas: grade.slice(1, LIM_LINHAS + 1).map(l => colunas.map((_, j) => String(l[ini + j] ?? '').trim())),
+          cortada: grade.length - 1 > LIM_LINHAS};
+}
+function lerCsv(txt){
+  txt = txt.replace(/^﻿/, '').replace(/\r\n?/g, '\n').replace(/\n+$/, '');
+  const l1 = txt.split('\n')[0];
+  const sep = [';', '\t', ','].sort((a, b) => l1.split(b).length - l1.split(a).length)[0];
+  const grade = [[]]; let v = '', aspas = false;
+  for (let i = 0; i < txt.length; i++) {
+    const ch = txt[i];
+    if (aspas) { if (ch !== '"') v += ch; else if (txt[i + 1] === '"') { v += '"'; i++; } else aspas = false; }
+    else if (ch === '"') aspas = true;
+    else if (ch === sep) { grade.at(-1).push(v); v = ''; }
+    else if (ch === '\n') { grade.at(-1).push(v); v = ''; grade.push([]); }
+    else v += ch;
+  }
+  grade.at(-1).push(v);
+  return grade;
+}
+async function lerPlanilha(buf, nomeArq){
+  const base = nomeArq.replace(/\.[^.]+$/, '');
+  if (/\.(csv|txt)$/i.test(nomeArq)) {
+    let txt; try { txt = new TextDecoder('utf-8', {fatal:true}).decode(buf); } catch { txt = new TextDecoder('windows-1252').decode(buf); }
+    const t = tabelaDe(base, lerCsv(txt)); return t ? [t] : [];
+  }
+  if (/\.xls$/i.test(nomeArq)) throw new Error('Arquivos .xls antigos não são lidos. No Excel, use Salvar como > Pasta de Trabalho do Excel (.xlsx).');
+  const z = await lerZip(buf);
+  const wb = await z.ler('xl/workbook.xml');
+  if (!wb) throw new Error('O arquivo não parece ser uma planilha do Excel.');
+  const rels = Object.fromEntries([...(await z.ler('xl/_rels/workbook.xml.rels') || '').matchAll(/<Relationship\b[^>]*>/g)].map(m => [attr(m[0], 'Id'), attr(m[0], 'Target')]));
+  const txtDe = x => xmlTxt([...x.matchAll(/<t(?:\s[^>]*)?>([^<]*)<\/t>/g)].map(t => t[1]).join(''));
+  const textos = [...(await z.ler('xl/sharedStrings.xml') || '').matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => txtDe(m[1]));
+  // Estilos só para reconhecer percentual e data; o resto sai como número.
+  const st = await z.ler('xl/styles.xml') || '';
+  const fmts = Object.fromEntries([...st.matchAll(/<numFmt\b[^>]*>/g)].map(m => [attr(m[0], 'numFmtId'), attr(m[0], 'formatCode')]));
+  const xfs = (((st.match(/<cellXfs\b[\s\S]*?<\/cellXfs>/) || [''])[0]).match(/<xf\b[^>]*>/g) || []).map(x => {
+    const id = +attr(x, 'numFmtId'), cod = (fmts[id] || '').replace(/"[^"]*"|\[[^\]]*\]/g, '');
+    if (id === 9 || id === 10 || cod.includes('%')) return '%';
+    if ((id >= 14 && id <= 17) || id === 22 || /[dy]/i.test(cod)) return (id === 17 || (cod && !/d/i.test(cod))) ? 'mes' : 'data';
+    return '';
+  });
+  const fmtVal = (v, tipo) => {
+    const n = Number(v);
+    if (v === '' || isNaN(n)) return v;
+    if (tipo === '%') return fmtNum(n * 100) + '%';
+    if (!tipo) return fmtNum(n);
+    const d = new Date(Math.round((n - 25569) * 864e5)), p2 = x => String(x).padStart(2, '0');
+    return (tipo === 'data' ? p2(d.getUTCDate()) + '/' : '') + p2(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear();
+  };
+  const abas = [...wb.matchAll(/<sheet\b[^>]*>/g)].map(m => ({nome: attr(m[0], 'name'), alvo: rels[attr(m[0], 'r:id')]}));
+  const saida = [];
+  for (const a of abas) {
+    const xml = a.alvo && await z.ler(a.alvo.startsWith('/') ? a.alvo.slice(1) : 'xl/' + a.alvo.replace(/^\.\//, ''));
+    if (!xml) continue;
+    const grade = [];
+    for (const r of xml.matchAll(/<row\b([^>]*?)(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+      const lin = []; let prox = 0;
+      for (const c of (r[2] || '').matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const ref = attr(c[1], 'r'), k = ref ? colIdx(ref) : prox, t = attr(c[1], 't'), corpo = c[2] || '';
+        const v = xmlTxt((corpo.match(/<v>([^<]*)<\/v>/) || [])[1] || '');
+        prox = k + 1;
+        lin[k] = t === 's' ? (textos[+v] ?? '') : t === 'inlineStr' ? txtDe(corpo) : t === 'b' ? (v === '1' ? 'Verdadeiro' : 'Falso')
+          : (t === 'str' || t === 'e') ? v : fmtVal(v, xfs[+attr(c[1], 's') || 0]);
+      }
+      const rn = +attr(r[1], 'r');
+      grade[rn ? rn - 1 : grade.length] = lin;
+    }
+    const tab = tabelaDe(abas.length > 1 ? `${base} · ${a.nome}` : base, Array.from(grade, l => Array.from(l || [], x => x ?? '')));
+    if (tab) saida.push(tab);
+  }
+  return saida;
+}
+
+const NOVO_SLIDE = estrutura => ({estrutura, titulo:'', conteudo:'', layout:'', imagens:[], graficos:[]});
+
+// ---- Montar slides com IA (API do Claude com a chave do próprio usuário) ----
+const ESQUEMA_IA = {type:'object', additionalProperties:false, required:['slides'], properties:{slides:{type:'array', items:{
+  type:'object', additionalProperties:false, required:['estrutura','titulo','conteudo','imagem','graficos'], properties:{
+    estrutura:{type:'string', enum:Object.keys(ESTRUTURAS)}, titulo:{type:'string'}, conteudo:{type:'string'}, imagem:{type:'string'},
+    graficos:{type:'array', items:{type:'object', additionalProperties:false, required:['tipo','titulo','unidade','colunas','linhas'], properties:{
+      tipo:{type:'string', enum:['colunas','barras','pizza','linha']}, titulo:{type:'string'}, unidade:{type:'string'},
+      colunas:{type:'array', items:{type:'string'}}, linhas:{type:'array', items:{type:'array', items:{type:'string'}}}}}}}}}}};
+const SISTEMA_IA = `Você estrutura apresentações executivas em português do Brasil. Devolva de 5 a 8 slides; o primeiro é a capa (estrutura "capa").
+Tipos de slide: ${Object.entries(ESTRUTURAS).map(([k, e]) => `${k} (${e.nome}: ${e.dica})`).join('; ')}.
+Títulos curtos que antecipam a conclusão. Conteúdo objetivo e completo, escrito como instrução para quem vai desenhar o slide (ex.: "Indicadores: ...; Destaque: ..." ou "Pilar X: ..."). Use só os números e fatos informados; onde faltar um dado, escreva um marcador entre colchetes, como [X]% ou [cliente]. Nunca invente valores.
+Gráficos: só quando houver dados informados ou nas planilhas. "colunas" traz o nome da coluna de rótulos e de cada série; cada item de "linhas" traz o rótulo e os valores como texto, no formato brasileiro (1.234,5 ou 48%). Sem dados, devolva a lista vazia.
+"imagem": descrição curta de uma fotografia realista para a capa e para slides que ganham com imagem; texto vazio quando o slide não precisa de imagem.`;
+function pedidoIA(s, modelo){
+  const m = s.meta;
+  const plan = (s.planilhas || []).map(p => `Planilha ${q(p.nome)}:\n` + [p.colunas, ...p.linhas.slice(0, 80)].map(l => l.join(' | ')).join('\n')).join('\n\n');
+  const texto = bl(
+    lab('Título:', m.titulo), lab('Empresa:', m.empresa), lab('Área:', m.area),
+    lab('Público:', (PUBLICOS[m.publico] || {}).nome), lab('Objetivo:', (OBJETIVOS[m.objetivo] || {}).nome),
+    lab('Mensagem central:', m.mensagem), lab('Contexto:', m.contexto),
+    has(m.numeros) && lab('Números informados:', lst(m.numeros)),
+    has(plan) && lab('Planilhas importadas (use nos gráficos quando fizer sentido):', plan),
+    s.slides.some(sl => has(sl.conteudo)) && lab('Rascunho atual dos slides (melhore e complete, mantendo o que estiver bom):',
+      s.slides.map((sl, i) => `${i + 1}. [${sl.estrutura}] ${[sl.titulo, sl.conteudo].filter(has).join(' — ')}`).join('\n')));
+  return {model: modelo, max_tokens: 16000, output_config: {effort:'medium', format: {type:'json_schema', schema: ESQUEMA_IA}},
+          system: SISTEMA_IA, messages: [{role:'user', content: texto}]};
+}
+function slidesDaIA(json){
+  const lista = (json && Array.isArray(json.slides) ? json.slides : []).filter(x => x && typeof x === 'object');
+  if (!lista.length) throw new Error('A IA não devolveu slides.');
+  return lista.map((x, i) => ({...NOVO_SLIDE(x.estrutura in ESTRUTURAS ? x.estrutura : 'livre'),
+    titulo: String(x.titulo || ''), conteudo: String(x.conteudo || ''),
+    imagens: has(x.imagem) ? [{uso: i === 0 || x.estrutura === 'capa' ? 'fundo' : 'conteudo', arquivo:'', descricao: String(x.imagem)}] : [],
+    graficos: (Array.isArray(x.graficos) ? x.graficos : []).filter(g => g && Array.isArray(g.colunas) && g.colunas.length >= 2 && Array.isArray(g.linhas) && g.linhas.length)
+      .map(g => ({tipo: g.tipo in TIPOS_GRAF ? g.tipo : 'colunas', titulo: String(g.titulo || ''), unidade: String(g.unidade || ''), descricao:'', fonte:'manual',
+        planilha:'', colRotulo:'', colValores:[], tabela: {colunas: g.colunas.map(String), linhas: g.linhas.map(l => g.colunas.map((_, k) => String((l || [])[k] ?? '')))}}))
+  }));
+}
+
+// Exemplos genéricos. Números entre [colchetes] são para preencher: não há dado real aqui.
+const OPCOES_PADRAO = {naoInventar:true, tituloConclusao:true, rodape:true, notas:false, checklist:true};
+const VISUAL_INICIAL = {modo:'padrao', template:'', paleta:'consultoria', cor1:'#0B1F3A', cor2:'#E4002B', fonte:''};
+const exemplo = (id, nome, icone, meta, slides) => ({id, nome, icone, estado: {
+  meta: {titulo:'', empresa:'', area:'', parceiro:'', classificacao:'', publico:'diretoria', objetivo:'proposta', destino:'copilot',
+         data:'[mês e ano]', mensagem:'', contexto:'', numeros:[], arquivo:'', extras:'', ...meta},
+  opcoes: {...OPCOES_PADRAO}, visual: {...VISUAL_INICIAL}, planilhas: [],
+  slides: slides.map(([estrutura, titulo, conteudo, fundo, graficos]) => ({estrutura, titulo, conteudo, layout:'',
+    imagens: fundo ? [{uso:'fundo', arquivo:'', descricao:fundo}] : [], graficos: graficos || []}))
+}});
+// Gráfico com dados digitados: colunas = [rótulo, série 1, série 2...]
+const GRAF = (tipo, titulo, unidade, colunas, linhas, descricao = '') =>
+  ({tipo, titulo, unidade, descricao, fonte:'manual', tabela:{colunas, linhas}, planilha:'', colRotulo:'', colValores:[]});
+const UNIDADES = ['Unidade A','Unidade B','Unidade C','Unidade D'];
+
+const EXEMPLOS = [
+  exemplo('resultados', 'Resultados trimestrais', 'grafico', {
+    titulo:'Resultados do [trimestre]', publico:'board', objetivo:'resultado',
+    mensagem:'Fechamos o [trimestre] com [X]% da meta de receita e margem de [X]%. O crescimento veio de [unidades] e a atenção agora está em [unidade].',
+    contexto:'Apresentação de resultados do [trimestre] para a diretoria. Mostra o resultado consolidado, o desempenho de cada unidade de negócio frente à meta, como a receita se distribui, a satisfação dos clientes e as prioridades do próximo trimestre.\n\nOs números são do fechamento de [mês/ano].',
+    numeros:['R$ [X] mi de receita no trimestre','[X]% de atingimento da meta','[X]% de margem operacional','[X]% de crescimento sobre o mesmo trimestre do ano anterior']
+  }, [
+    ['capa', 'RESULTADOS DO [TRIMESTRE]', 'Kicker: RESULTADOS. Subtítulo: desempenho consolidado e por unidade de negócio.', 'vista aérea de um centro empresarial moderno ao entardecer, prédios de vidro e luz suave, sem pessoas e sem marcas visíveis'],
+    ['indicadores', 'O trimestre fecha com [X]% da meta de receita', 'Indicadores: R$ [X] mi de receita; [X]% de atingimento da meta; [X]% de margem; [X]% de crescimento sobre o ano anterior. Destaque: [o que explica o resultado]. Gráfico de linha pequeno abaixo dos indicadores.', '',
+      [GRAF('linha', 'Receita por mês: realizado × meta', 'R$ mi', ['Mês','Realizado','Meta'], [['Mês 1','[X]','[X]'],['Mês 2','[X]','[X]'],['Mês 3','[X]','[X]']])]],
+    ['livre', 'Resultado por unidade: quem puxou o crescimento', 'O gráfico é o elemento principal e ocupa cerca de dois terços do slide. À direita, um takeaway com as unidades acima da meta e a que ficou abaixo, com o motivo em uma linha.', '',
+      [GRAF('colunas', 'Receita por unidade: realizado × meta', 'R$ mi', ['Unidade','Realizado','Meta'], UNIDADES.map(u => [u, '[X]', '[X]']), 'destacar as unidades acima da meta')]],
+    ['livre', 'Como a receita se distribui entre as unidades', 'Gráfico de rosca à esquerda. À direita, leitura curta: quanto as maiores unidades concentram e o peso das mais novas.', '',
+      [GRAF('pizza', 'Participação na receita', '%', ['Unidade','Participação'], UNIDADES.map(u => [u, '[X]%']))]],
+    ['livre', 'Satisfação dos clientes por unidade', 'Barras ordenadas da maior para a menor nota, com uma linha de referência na meta de [X]. Destaque lateral: as unidades abaixo da meta e a ação em curso.', '',
+      [GRAF('barras', 'NPS por unidade', 'pontos', ['Unidade','NPS'], UNIDADES.map(u => [u, '[X]']), 'marcar as unidades abaixo da meta')]],
+    ['timeline', 'Prioridades para o próximo trimestre', 'Etapas: [prioridade 1]; [prioridade 2]; [prioridade 3]; revisão das metas por unidade. Entrega esperada: [entrega principal]. Pedido à diretoria: [decisão ou apoio necessário].']
+  ]),
+
+  exemplo('projeto', 'Proposta de projeto', 'projeto', {
+    titulo:'[Nome do projeto]', publico:'diretoria', objetivo:'decisao',
+    mensagem:'Com [investimento] em [prazo], o [projeto] reduz [problema] em [X]% e paga o investimento em [X] meses.',
+    contexto:'Hoje [processo] depende de [etapas manuais ou sistema antigo], o que gera [atraso, retrabalho ou custo]. O projeto propõe [solução] em [X] fases, começando por [primeira entrega].\n\nO pedido é aprovar o orçamento e o time para a primeira fase.',
+    numeros:['[X] horas por mês gastas em [atividade]','R$ [X] mil de custo anual com [problema]','[X]% de retrabalho no processo atual']
+  }, [
+    ['capa', '[NOME DO PROJETO]', 'Kicker: PROPOSTA. Subtítulo: [o que o projeto resolve em uma linha].', 'equipe de trabalho em um escritório amplo e iluminado, mesa com notebooks e anotações, pessoas desfocadas ao fundo'],
+    ['comparativo', 'O processo atual custa caro e não escala', 'Hoje: [como funciona], [X] horas por mês, [X]% de retrabalho. Com o projeto: [como vai funcionar], [X] horas por mês, retrabalho perto de zero.'],
+    ['pilares', 'Três frentes para resolver o problema', 'Pilar Processo: [o que muda no processo]. Pilar Tecnologia: [ferramenta ou sistema]. Pilar Pessoas: [treinamento e responsáveis].'],
+    ['indicadores', 'O investimento se paga em [X] meses', 'Indicadores: R$ [X] mil de investimento; R$ [X] mil de economia por ano; [X] meses de retorno. Destaque: impacto potencial, a confirmar ao fim da fase 1.', '',
+      [GRAF('colunas', 'Custo anual: hoje × com o projeto', 'R$ mil', ['Cenário','Custo anual'], [['Hoje','[X]'],['Com o projeto','[X]']])]],
+    ['timeline', 'Plano em três fases', 'Etapas: fase 1, [entrega] em [prazo]; fase 2, [entrega] em [prazo]; fase 3, [entrega] em [prazo]. Entrega esperada: [resultado final]. Pedido: aprovar a fase 1.'],
+    ['recomendacao', 'Recomendamos aprovar a fase 1 agora', 'Razões: [razão 1]; [razão 2]; [razão 3]. Riscos: [risco principal], mitigado com [ação]. Decisão pedida: orçamento de R$ [X] mil e [X] pessoas por [prazo].']
+  ]),
+
+  exemplo('produto', 'Lançamento de produto', 'produto', {
+    titulo:'Lançamento do [produto]', publico:'gestores', objetivo:'proposta',
+    mensagem:'O [produto] atende [público] que hoje [dor], e a meta é chegar a [X] clientes no primeiro ano.',
+    contexto:'O [produto] é [descrição curta]. Atende principalmente [público 1] e [público 2]. O lançamento está previsto para [data], com venda por [canais].\n\nA apresentação alinha o time sobre a proposta de valor, os públicos, as metas e o plano de lançamento.',
+    numeros:['[X] clientes no piloto','[X]% de conversão no piloto','nota [X] de satisfação no piloto']
+  }, [
+    ['capa', '[PRODUTO]', 'Kicker: LANÇAMENTO. Subtítulo: [promessa do produto em uma linha].', 'produto em destaque sobre uma mesa clara em estúdio fotográfico, luz suave lateral, fundo neutro, sem marcas visíveis'],
+    ['categorias', 'Dois públicos, duas mensagens', 'Público [1]: [dor] e [como o produto resolve]. Público [2]: [dor] e [como o produto resolve]. Regra: toda comunicação começa pela dor do cliente, não pela funcionalidade.'],
+    ['pilares', 'O que torna o [produto] diferente', 'Pilar [1]: [diferencial]. Pilar [2]: [diferencial]. Pilar [3]: [diferencial].'],
+    ['indicadores', 'Metas do primeiro ano', 'Indicadores: [X] clientes; R$ [X] mi de receita; [X]% de recompra. Destaque: o piloto teve [X]% de conversão com [X] clientes.', '',
+      [GRAF('linha', 'Clientes previstos por trimestre', 'clientes', ['Trimestre','Clientes'], [['T1','[X]'],['T2','[X]'],['T3','[X]'],['T4','[X]']])]],
+    ['timeline', 'Plano de lançamento', 'Etapas: pré-venda em [data]; lançamento em [data]; campanha em [canais]; revisão de resultados em [data]. Entrega esperada: [X] clientes no primeiro trimestre. Pedido ao time: [o que cada área precisa fazer].']
+  ]),
+
+  exemplo('status', 'Status de projeto', 'status', {
+    titulo:'Status do [projeto]', publico:'comite', objetivo:'avanco',
+    mensagem:'O projeto está [X]% concluído e dentro do prazo; o ponto de atenção é [risco].',
+    contexto:'Atualização do [projeto] para o comitê. Desde a última reunião, concluímos [entregas] e começamos [próxima fase]. O principal risco é [risco], com impacto possível em [prazo ou custo].',
+    numeros:['[X]% de avanço geral','[X] de [X] entregas concluídas','[X]% do orçamento consumido']
+  }, [
+    ['capa', 'STATUS DO [PROJETO]', 'Kicker: ACOMPANHAMENTO. Subtítulo: avanço, riscos e próximos passos.', 'canteiro de trabalho organizado ou equipe reunida em frente a um quadro de planejamento, luz natural, sem pessoas em primeiro plano'],
+    ['indicadores', 'O projeto está [X]% concluído e no prazo', 'Indicadores: [X]% de avanço; [X] de [X] entregas; [X]% do orçamento. Etapas: [etapa 1] (concluída), [etapa 2] (em andamento), [etapa 3] (próxima), [etapa 4] (futura).', '',
+      [GRAF('barras', 'Avanço por frente', '%', ['Frente','Avanço'], [['Frente 1','[X]%'],['Frente 2','[X]%'],['Frente 3','[X]%'],['Frente 4','[X]%']], 'destacar a frente mais atrasada')]],
+    ['recomendacao', 'Precisamos decidir sobre [risco] até [data]', 'Recomendação: [ação]. Razões: [razão 1]; [razão 2]. Riscos: [risco], mitigação: [ação]. Decisão pedida: [o que o comitê precisa aprovar].'],
+    ['timeline', 'Próximas entregas', 'Etapas: [entrega 1] em [data]; [entrega 2] em [data]; [entrega 3] em [data]. Entrega esperada: [marco principal]. Pedido ao comitê: [apoio necessário].']
+  ])
+];
+const MODELO_INICIAL = EXEMPLOS[0].estado;
+
+if (typeof module !== 'undefined') module.exports = {buildPrompt, lerTemplate, lerPlanilha, lerCsv, tabelaGraf, dadosGraf, numero, paletaDe, PALETAS, DESTINOS, pedidoIA, slidesDaIA, ESQUEMA_IA, MODELO_INICIAL, NOVO_SLIDE, ESTRUTURAS, EXEMPLOS, TIPOS_GRAF, IMG_MIN};
+</script>
+
+<script>
+// ---------- Estado e armazenamento ----------
+const K_ATUAL = 'gerador.atual', K_PROD = 'gerador.salvas', K_TPL = 'gerador.templates', K_SEL = 'gerador.sel', K_IA = 'gerador.ia';
+const ehExemplo = n => String(n).startsWith('ex:'), exemploDe = n => EXEMPLOS.find(x => 'ex:' + x.id === n), PRIMEIRO = 'ex:' + EXEMPLOS[0].id;
+const clone = o => JSON.parse(JSON.stringify(o));
+const ler = (k, padrao) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : padrao; } catch { return padrao; } };
+const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
+const valido = o => o && o.meta && o.opcoes && o.visual && Array.isArray(o.slides);
+let estado = ler(K_ATUAL, null);
+if (!valido(estado)) estado = clone(MODELO_INICIAL);
+let produtos = ler(K_PROD, {}), templates = ler(K_TPL, {});
+const tplAtual = () => templates[estado.visual.template] || null;
+
+// ---------- Utilidades de interface ----------
+const el = (tag, attrs = {}, ...filhos) => { const e = document.createElement(tag); Object.assign(e, attrs); e.append(...filhos.filter(f => f != null)); return e; };
+let uid = 0;
+const ICO = {
+  salvar:'<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
+  lixo:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/>',
+  baixar:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  subir:'<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>',
+  livro:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 7h6"/>',
+  copiar:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  imagem:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  cima:'<path d="M12 19V5M6 11l6-6 6 6"/>', baixo:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+  mais:'<path d="M12 5v14M5 12h14"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  faisca:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/>',
+  chave:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
+  grafico:'<path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/>',
+  tabela:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
+  lapis:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  lua:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  sol:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>'
+};
+function ico(nome){
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor');
+  s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round'); s.setAttribute('aria-hidden', 'true');
+  s.innerHTML = ICO[nome]; return s;
+}
+document.querySelectorAll('[data-ico]').forEach(b => b.prepend(ico(b.dataset.ico)));
+const botao = (rotulo, icone, aoClicar, classe = 'btn small') => el('button', {type:'button', className:classe, onclick:aoClicar}, icone ? ico(icone) : null, rotulo);
+
+// Tema claro/escuro, salvo neste navegador
+const K_TEMA = 'gerador.tema';
+function aplicarTema(t){
+  if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+  const escuro = t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const b = document.getElementById('bTema'); b.replaceChildren(ico(escuro ? 'sol' : 'lua'));
+}
+aplicarTema(ler(K_TEMA, ''));
+document.getElementById('bTema').onclick = () => {
+  const escuro = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const t = escuro ? 'light' : 'dark'; gravar(K_TEMA, t); aplicarTema(t);
+};
+
+function avisar(msg){ const a = document.getElementById('aviso'); a.textContent = msg; a.classList.add('on'); clearTimeout(a._t); a._t = setTimeout(() => a.classList.remove('on'), 3000); }
+
+// Ditado: Web Speech API (Chrome e Edge). Um campo por vez.
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+function ditar(btn, ta){
+  if (!SR) { avisar('O ditado funciona no Chrome ou no Edge.'); return; }
+  if (rec) { const mesmo = rec._btn === btn; rec.stop(); if (mesmo) return; }
+  const r = new SR();
+  r.lang = 'pt-BR'; r.continuous = true; r.interimResults = true; r._btn = btn;
+  const base = ta.value.trim() ? ta.value.replace(/\s*$/, ' ') : '';
+  let final = '';
+  r.onresult = e => {
+    let parcial = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript.trim();
+      if (e.results[i].isFinal) final += t + ' '; else parcial += t + ' ';
+    }
+    ta.value = (base + final + parcial).trimEnd();
+    ta.dispatchEvent(new Event('input'));
+  };
+  r.onerror = e => avisar({ 'not-allowed':'Microfone bloqueado. Libere o acesso no ícone ao lado do endereço da página.',
+    'network':'O ditado precisa de internet.', 'no-speech':'Não ouvi nada. Clique em Ditar e fale de novo.',
+    'audio-capture':'Nenhum microfone encontrado.' }[e.error] || 'O ditado parou: ' + e.error);
+  r.onend = () => { btn.classList.remove('on'); btn.lastChild.textContent = 'Ditar'; btn.setAttribute('aria-pressed', 'false'); if (rec === r) rec = null; };
+  try { r.start(); } catch { avisar('Não foi possível iniciar o ditado. Tente de novo.'); return; }
+  rec = r; btn.classList.add('on'); btn.lastChild.textContent = 'Parar'; btn.setAttribute('aria-pressed', 'true');
+  avisar('Ouvindo. Fale o conteúdo e clique em Parar quando terminar.');
+}
+
+// Campo de texto ligado a obj[k]. tipo: text | area | lista. mic: botão de ditado.
+function campo(rotulo, obj, k, {tipo = 'text', rows = 3, mic = false, dica, ph = ''} = {}){
+  const id = 'f' + (++uid);
+  const lbl = el('label', {htmlFor:id}, rotulo, dica ? el('span', {className:'dica'}, dica) : null);
+  let inp;
+  if (tipo === 'text') inp = el('input', {type:'text', id, value: obj[k] ?? '', placeholder: ph});
+  else inp = el('textarea', {id, rows, placeholder: ph, value: tipo === 'lista' ? (obj[k] || []).join('\n') : (obj[k] ?? '')});
+  inp.oninput = () => { obj[k] = tipo === 'lista' ? inp.value.split('\n').map(s => s.trim()).filter(Boolean) : inp.value; mudou(); };
+  let caixa = inp;
+  if (mic) {
+    const b = botao(el('span', {}, 'Ditar'), 'mic', () => ditar(b, inp), 'btn small mic');
+    b.title = 'Ditar com o microfone'; b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', 'Ditar ' + rotulo.toLowerCase());
+    caixa = el('div', {className:'com-mic'}, inp, b);
+  }
+  return el('div', {className:'campo'}, lbl, caixa);
+}
+function selecao(rotulo, obj, k, opcoes, aoMudar){
+  const id = 'f' + (++uid);
+  const s = el('select', {id}, ...Object.entries(opcoes).map(([v, o]) => el('option', {value:v}, o.nome || o)));
+  s.value = obj[k];
+  s.onchange = () => { obj[k] = s.value; aoMudar ? aoMudar() : mudou(); };
+  return el('div', {className:'campo'}, el('label', {htmlFor:id}, rotulo), s);
+}
+
+// ---------- Seções ----------
+const CLASSIF = {'':'Sem classificação', 'Uso interno':'Uso interno', 'Confidencial':'Confidencial', 'Restrito':'Restrito', 'Público':'Público'};
+function secaoSobre(){
+  const m = estado.meta;
+  return el('section', {},
+    el('h2', {}, el('span', {className:'passo'}, '1'), 'Sobre a apresentação'),
+    el('p', {className:'desc'}, 'O essencial para a IA entender a história.'),
+    campo('Título ou nome da iniciativa', m, 'titulo'),
+    el('div', {className:'linha3'}, campo('Nome da empresa', m, 'empresa', {ph:'Opcional. Ex.: Acme S.A.'}), campo('Área responsável', m, 'area', {ph:'Opcional'}), campo('Data', m, 'data', {ph:'Ex.: Novembro de 2026'})),
+    el('div', {className:'linha2'}, campo('Área ou empresa parceira', m, 'parceiro', {ph:'Opcional'}), selecao('Classificação do documento', m, 'classificacao', CLASSIF)),
+    el('div', {className:'linha3', style:'grid-template-columns:1fr 1fr 1fr'}, selecao('Público', m, 'publico', PUBLICOS), selecao('Objetivo', m, 'objetivo', OBJETIVOS), selecao('Onde vai usar o prompt', m, 'destino', DESTINOS)),
+    campo('Mensagem central', m, 'mensagem', {tipo:'area', rows:2, mic:true, dica:'A frase que o público deve lembrar.'}),
+    campo('Contexto', m, 'contexto', {tipo:'area', rows:6, mic:true, dica:'Conte a história com suas palavras: o que é, por que importa, o que já foi feito.'}),
+    campo('Números já alcançados', m, 'numeros', {tipo:'lista', rows:3, dica:'Um por linha. A IA só usa estes números.'}));
+}
+
+const baixa = im => im.largura > 0 && im.largura < (IMG_MIN[im.uso] || 1600);
+// Imagens do slide: cada uma é fundo do slide ou parte do slide; arquivo (só o nome) ou descrição.
+function blocoImagens(sl, i){
+  sl.imagens = sl.imagens || [];
+  const box = el('div', {className:'imagens'});
+  const desenhar = () => {
+    box.replaceChildren(el('div', {className:'rotulo-img'}, 'Imagens', el('span', {className:'dica'}, 'Opcional. Diga se a imagem é o fundo do slide ou parte do conteúdo.')));
+    sl.imagens.forEach((im, j) => {
+      const grupo = 'uso' + (++uid);
+      const opcao = (v, t) => el('label', {}, el('input', {type:'radio', name:grupo, value:v, checked: im.uso === v, onchange:() => {
+        im.uso = v;
+        if (v === 'fundo') sl.imagens.forEach(x => { if (x !== im && x.uso === 'fundo') x.uso = 'conteudo'; }); // um fundo por slide
+        desenhar(); mudou();
+      }}), t);
+      const arq = el('input', {type:'file', accept:'image/*', hidden:true, onchange: async e => {
+        const f = e.target.files[0]; if (!f) return;
+        Object.assign(im, {arquivo: f.name, largura: 0, altura: 0});
+        try { const b = await createImageBitmap(f); im.largura = b.width; im.altura = b.height; b.close(); } catch { /* formato que o navegador não abre: segue sem medir */ }
+        desenhar(); mudou();
+        avisar(baixa(im) ? `"${f.name}" tem ${im.largura} px de largura, abaixo do recomendado (${IMG_MIN[im.uso] || 1600} px). Pode ficar borrada no telão.`
+          : `Lembre de anexar "${f.name}" na IA junto com o prompt.`);
+      }});
+      box.append(el('div', {className:'img-item'},
+        el('div', {className:'img-topo'},
+          el('div', {className:'seg', role:'radiogroup', ariaLabel:`Uso da imagem ${j + 1} do slide ${i + 1}`}, opcao('fundo', 'Fundo do slide'), opcao('conteudo', 'Parte do slide')),
+          botao(im.arquivo ? 'Trocar arquivo' : 'Escolher arquivo', 'imagem', () => arq.click()), arq,
+          im.arquivo ? el('span', {className:'arq' + (baixa(im) ? ' baixa' : ''), title: baixa(im) ? 'Resolução abaixo do recomendado' : im.arquivo}, im.arquivo + (im.largura ? ` · ${im.largura}×${im.altura}` : '')) : null,
+          botao('Remover', 'lixo', () => { sl.imagens.splice(j, 1); desenhar(); mudou(); }, 'btn small perigo')),
+        campo(im.arquivo ? 'Descrição (opcional)' : 'Descrição da imagem', im, 'descricao',
+          {tipo:'area', rows:2, mic:true, ph: im.arquivo ? 'O que a imagem mostra ou como usar' : 'Sem arquivo: escreva ou dite a imagem para a IA gerar ou escolher em alta resolução'})));
+    });
+    box.append(botao('Adicionar imagem', 'imagem', () => {
+      sl.imagens.push({uso: sl.imagens.some(x => x.uso === 'fundo') ? 'conteudo' : 'fundo', arquivo:'', descricao:''});
+      desenhar(); mudou();
+    }));
+  };
+  desenhar();
+  return box;
+}
+
+// ---------- Planilhas e gráficos ----------
+// Importa .xlsx/.csv para estado.planilhas (mesmo nome = atualiza). depois(p) recebe a primeira planilha lida.
+function importarPlanilha(depois){
+  const inp = el('input', {type:'file', accept:'.xlsx,.xlsm,.csv,.txt,.xls'});
+  inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return;
+    try {
+      const novas = await lerPlanilha(await f.arrayBuffer(), f.name);
+      if (!novas.length) throw new Error('A planilha está vazia.');
+      for (const p of novas) { const k = estado.planilhas.findIndex(x => x.nome === p.nome); if (k < 0) estado.planilhas.push(p); else estado.planilhas[k] = p; }
+      depois?.(novas[0]);
+      secaoPlanilhas.redesenhar?.(); secaoSlides.redesenhar?.(); mudou();
+      avisar(novas.some(p => p.cortada) ? `Planilha lida, mas só as primeiras ${LIM_LINHAS} linhas entraram.`
+        : `Planilha lida: ${novas.length === 1 ? novas[0].linhas.length + ' linhas' : novas.length + ' abas'}.`);
+    } catch (e) { alert('Não foi possível ler a planilha. ' + (e.message || '') + ' Use um arquivo .xlsx salvo pelo Excel ou um .csv.'); }
+  };
+  inp.click();
+}
+const ligarPlanilha = (g, p) => { g.planilha = p?.nome || ''; g.colRotulo = p?.colunas[0] || ''; g.colValores = p ? p.colunas.slice(1, 2) : []; };
+const NOVO_GRAF = () => {
+  const g = {tipo:'colunas', titulo:'', unidade:'', descricao:'', fonte:'manual', planilha:'', colRotulo:'', colValores:[],
+    tabela:{colunas:['Categoria','Valor'], linhas:[['',''],['',''],['','']]}};
+  if (estado.planilhas.length) { g.fonte = 'planilha'; ligarPlanilha(g, estado.planilhas[0]); }
+  return g;
+};
+const tabelaPrev = (t, max = 8) => el('div', {className:'tab-ed'}, el('table', {className:'tab-prev'},
+  el('thead', {}, el('tr', {}, ...t.colunas.map(c => el('th', {}, c)))),
+  el('tbody', {}, ...t.linhas.slice(0, max).map(l => el('tr', {}, ...l.map(v => el('td', {}, v || '—')))))),
+  t.linhas.length > max ? el('span', {className:'dica'}, `e mais ${t.linhas.length - max} linhas`) : null);
+
+// Tabela editável do gráfico: primeira coluna = rótulos, demais = séries. Aceita colar células do Excel.
+function editorTabela(t, series){
+  const box = el('div', {className:'tab-ed'});
+  const mini = (rot, fn) => { const b = botao(null, 'x', fn, 'btn mini perigo'); b.title = rot; b.ariaLabel = rot; return b; };
+  const colar = (e, r, c) => {
+    const txt = e.clipboardData.getData('text');
+    if (!/[\t\n]/.test(txt.trim())) return; // um valor só: colagem normal
+    e.preventDefault();
+    txt.replace(/\r/g, '').replace(/\n+$/, '').split('\n').forEach((lin, dr) => lin.split('\t').forEach((v, dc) => {
+      const k = c + dc, rr = r + dr;
+      while (t.colunas.length <= k) { t.colunas.push('Série ' + t.colunas.length); t.linhas.forEach(l => l.push('')); }
+      if (rr < 0) { t.colunas[k] = v.trim(); return; }
+      while (t.linhas.length <= rr) t.linhas.push(t.colunas.map(() => ''));
+      t.linhas[rr][k] = v.trim();
+    }));
+    desenhar(); mudou();
+  };
+  const cel = (arr, k, r, ph, rot) => {
+    const inp = el('input', {type:'text', value: arr[k] ?? '', placeholder: ph, ariaLabel: rot});
+    inp.oninput = () => { arr[k] = inp.value; mudou(); };
+    inp.onpaste = e => colar(e, r, k);
+    return inp;
+  };
+  function desenhar(){
+    box.replaceChildren(
+      el('table', {},
+        el('thead', {}, el('tr', {}, ...t.colunas.map((c, k) => el('th', {}, el('div', {className:'th'},
+          cel(t.colunas, k, -1, k ? 'Série' : 'Categoria', k ? `Nome da série ${k}` : 'Nome da coluna de rótulos'),
+          k > 1 ? mini('Remover esta série', () => { t.colunas.splice(k, 1); t.linhas.forEach(l => l.splice(k, 1)); desenhar(); mudou(); }) : null))), el('th'))),
+        el('tbody', {}, ...t.linhas.map((l, r) => el('tr', {},
+          ...t.colunas.map((_, k) => el('td', {}, cel(l, k, r, k ? 'Valor' : 'Rótulo', `${k ? t.colunas[k] || 'Valor' : 'Rótulo'}, linha ${r + 1}`))),
+          el('td', {}, mini('Remover linha', () => { t.linhas.splice(r, 1); desenhar(); mudou(); })))))),
+      el('div', {className:'tab-acoes'},
+        botao('Adicionar linha', 'mais', () => { t.linhas.push(t.colunas.map(() => '')); desenhar(); mudou(); box.querySelector('tbody tr:last-child input')?.focus(); }),
+        series ? botao('Adicionar série', 'mais', () => { t.colunas.push('Série ' + t.colunas.length); t.linhas.forEach(l => l.push('')); desenhar(); mudou(); }) : null,
+        el('span', {className:'dica'}, (series ? '' : 'A pizza usa só a primeira coluna de valores. ') + 'Dica: copie as células no Excel e cole na primeira caixa.')));
+  }
+  desenhar();
+  return box;
+}
+
+// Dados vindos de uma planilha importada: escolhe planilha, coluna dos rótulos e colunas dos valores.
+function fontePlanilha(g, redesenhar){
+  const importar = rot => botao(rot, 'tabela', () => importarPlanilha(p => ligarPlanilha(g, p)), 'btn small' + (estado.planilhas.length ? '' : ' primary'));
+  if (!estado.planilhas.length) return el('div', {className:'vazio'}, el('span', {className:'dica'}, 'Nenhuma planilha importada ainda.'), importar('Importar planilha (.xlsx ou .csv)'));
+  const p = estado.planilhas.find(x => x.nome === g.planilha);
+  const sel = (rot, valor, opcoes, aoMudar) => {
+    const id = 'f' + (++uid), s = el('select', {id}, ...opcoes.map(([v, t]) => el('option', {value:v}, t)));
+    s.value = valor; s.onchange = () => { aoMudar(s.value); redesenhar(); mudou(); };
+    return el('div', {className:'campo'}, el('label', {htmlFor:id}, rot), s);
+  };
+  const selP = sel('Planilha', p ? p.nome : '', [...(p ? [] : [['', 'Escolha a planilha']]), ...estado.planilhas.map(x => [x.nome, x.nome])],
+    v => ligarPlanilha(g, estado.planilhas.find(x => x.nome === v)));
+  if (!p) return el('div', {}, selP, el('div', {className:'vazio'}, importar('Importar outra planilha')));
+  const selR = sel('Coluna dos rótulos', g.colRotulo, p.colunas.map(c => [c, c]), v => { g.colRotulo = v; g.colValores = g.colValores.filter(c => c !== v); });
+  const chips = el('div', {className:'chips', role:'group', ariaLabel:'Colunas com os valores'}, ...p.colunas.filter(c => c !== g.colRotulo).map(c =>
+    el('label', {}, el('input', {type:'checkbox', checked: g.colValores.includes(c), onchange: e => {
+      g.colValores = p.colunas.filter(x => x === c ? e.target.checked : g.colValores.includes(x)); redesenhar(); mudou(); }}), c)));
+  const t = tabelaGraf(g, estado.planilhas);
+  if (t && g.tipo === 'pizza') { t.colunas = t.colunas.slice(0, 2); t.linhas = t.linhas.map(l => l.slice(0, 2)); }
+  return el('div', {},
+    el('div', {className:'plan-sel'}, selP, selR),
+    el('div', {className:'rot-fonte'}, 'Colunas com os valores', el('span', {className:'dica'}, g.tipo === 'pizza' ? 'A pizza usa só a primeira coluna marcada.' : 'Marque uma ou mais. Cada coluna vira uma série do gráfico.')),
+    chips,
+    t ? el('div', {},
+          tabelaPrev(t),
+          t.linhas.length > 12 ? el('p', {className:'dica'}, `${t.linhas.length} categorias. Acima de 12 o gráfico fica difícil de ler: filtre a planilha ou passe para "Digitar" e deixe só as principais.`) : null)
+      : el('p', {className:'dica'}, 'Marque ao menos uma coluna de valores.'),
+    el('div', {className:'vazio'},
+      t ? botao('Editar estes dados', 'lapis', () => {
+        g.tabela = {colunas: [...t.colunas], linhas: t.linhas.map(l => [...l])}; g.fonte = 'manual'; redesenhar(); mudou();
+        avisar('Dados copiados para edição. A planilha original não muda.');
+      }) : null,
+      importar('Importar outra planilha')));
+}
+
+function blocoGraficos(sl, i){
+  sl.graficos = sl.graficos || [];
+  const box = el('div', {className:'imagens'});
+  const desenhar = () => {
+    box.replaceChildren(el('div', {className:'rotulo-img'}, 'Gráficos', el('span', {className:'dica'}, 'Opcional. Digite os números ou use uma planilha importada.')));
+    sl.graficos.forEach((g, j) => {
+      const seg = (k, opcoes, aria) => { const grupo = 'g' + (++uid);
+        return el('div', {className:'seg', role:'radiogroup', ariaLabel:aria}, ...opcoes.map(([v, t]) => el('label', {},
+          el('input', {type:'radio', name:grupo, value:v, checked: g[k] === v, onchange:() => {
+            g[k] = v;
+            if (k === 'fonte' && v === 'planilha' && !g.planilha && estado.planilhas.length) ligarPlanilha(g, estado.planilhas[0]);
+            desenhar(); mudou(); }}), t))); };
+      box.append(el('div', {className:'img-item graf-item'},
+        el('div', {className:'img-topo'},
+          seg('tipo', Object.entries(TIPOS_GRAF).map(([k, x]) => [k, x.nome]), `Tipo do gráfico ${j + 1} do slide ${i + 1}`),
+          botao('Remover', 'lixo', () => { sl.graficos.splice(j, 1); desenhar(); mudou(); }, 'btn small perigo')),
+        el('div', {className:'linha2'},
+          campo('Título do gráfico', g, 'titulo', {ph:'Opcional'}),
+          campo('Unidade dos valores', g, 'unidade', {ph:'Ex.: R$ mi, %, nº de apólices'})),
+        el('div', {className:'img-topo'}, el('span', {className:'rot-fonte'}, 'Dados:'),
+          seg('fonte', [['manual', 'Digitar'], ['planilha', 'Da planilha']], `Origem dos dados do gráfico ${j + 1}`)),
+        g.fonte === 'planilha' ? fontePlanilha(g, desenhar) : editorTabela(g.tabela, g.tipo !== 'pizza'),
+        campo('O que destacar', g, 'descricao', {tipo:'area', rows:2, mic:true, ph:'Opcional: escreva ou dite. Ex.: destacar a área que mais cresceu'})));
+    });
+    box.append(botao('Adicionar gráfico', 'grafico', () => { sl.graficos.push(NOVO_GRAF()); desenhar(); mudou(); }));
+  };
+  desenhar();
+  return box;
+}
+
+function secaoPlanilhas(){
+  const lista = el('div');
+  const desenhar = () => lista.replaceChildren(...estado.planilhas.map((p, j) => el('div', {className:'plan'},
+    ico('tabela'),
+    el('div', {}, el('b', {}, p.nome), el('span', {className:'dica'}, `${p.linhas.length} linhas · colunas: ${p.colunas.join(', ')}`)),
+    botao('Remover', 'lixo', () => {
+      const usada = estado.slides.some(sl => (sl.graficos || []).some(g => g.fonte === 'planilha' && g.planilha === p.nome));
+      if (!confirm(`Remover a planilha "${p.nome}"?${usada ? ' Há gráficos usando esta planilha: eles ficam sem dados.' : ''}`)) return;
+      estado.planilhas.splice(j, 1); desenhar(); secaoSlides.redesenhar?.(); mudou();
+    }, 'btn small perigo'))));
+  desenhar();
+  secaoPlanilhas.redesenhar = desenhar;
+  return el('section', {},
+    el('h2', {}, el('span', {className:'passo'}, '2'), 'Planilhas de dados'),
+    el('p', {className:'desc'}, 'Opcional. Importe a planilha com os números (Excel .xlsx ou .csv) para usar nos gráficos dos slides. Se importar de novo um arquivo com o mesmo nome, os gráficos ligados a ele se atualizam. O arquivo não sai do seu computador.'),
+    lista,
+    botao('Importar planilha (.xlsx ou .csv)', 'tabela', () => importarPlanilha(), 'btn primary'));
+}
+
+function secaoSlides(){
+  const lista = el('div');
+  const desenhar = () => {
+    lista.replaceChildren();
+    const tpl = estado.visual.modo === 'template' ? tplAtual() : null;
+    estado.slides.forEach((sl, i) => {
+      const e = ESTRUTURAS[sl.estrutura] || ESTRUTURAS.livre;
+      const mover = d => { estado.slides.splice(i + d, 0, estado.slides.splice(i, 1)[0]); desenhar(); mudou(); };
+      const tipo = el('select', {ariaLabel:`Tipo do slide ${i + 1}`}, ...Object.entries(ESTRUTURAS).map(([v, x]) => el('option', {value:v}, x.nome)));
+      tipo.value = sl.estrutura;
+      tipo.onchange = () => { sl.estrutura = tipo.value; desenhar(); mudou(); };
+      let layout = null;
+      if (tpl && tpl.layouts.length) {
+        layout = el('select', {ariaLabel:`Layout do template do slide ${i + 1}`}, el('option', {value:''}, 'Layout do template: automático'), ...tpl.layouts.map(n => el('option', {value:n}, n)));
+        layout.value = tpl.layouts.includes(sl.layout) ? sl.layout : '';
+        layout.onchange = () => { sl.layout = layout.value; mudou(); };
+      }
+      const sobe = botao(null, 'cima', () => mover(-1), 'btn small icone'), desce = botao(null, 'baixo', () => mover(1), 'btn small icone');
+      Object.assign(sobe, {title:'Subir', ariaLabel:`Subir slide ${i + 1}`, disabled: i === 0});
+      Object.assign(desce, {title:'Descer', ariaLabel:`Descer slide ${i + 1}`, disabled: i === estado.slides.length - 1});
+      const acoes = el('div', {className:'acoes'}, sobe, desce,
+        botao('Remover', 'lixo', () => { if (!has(sl.conteudo) || confirm(`Remover o slide ${i + 1}?`)) { estado.slides.splice(i, 1); desenhar(); mudou(); } }, 'btn small perigo'));
+      lista.append(el('div', {className: 'slide' + (i === novoIdx ? ' novo' : '')},
+        el('div', {className:'slide-topo'}, el('span', {className:'n'}, i + 1), el('div', {className:'sels'}, tipo, layout), acoes),
+        el('span', {className:'dica'}, e.dica),
+        el('div', {className:'corpo'},
+          campo('Título', sl, 'titulo', {ph:'Opcional: vazio, a IA propõe um título com a conclusão'}),
+          campo('Conteúdo', sl, 'conteudo', {tipo:'area', rows:4, mic:true, ph:'Escreva ou dite o que este slide precisa dizer.'}),
+          blocoImagens(sl, i),
+          blocoGraficos(sl, i))));
+    });
+    novoIdx = -1;
+  };
+  let novoIdx = -1;
+  desenhar();
+  secaoSlides.redesenhar = desenhar;
+  const novo = el('select', {ariaLabel:'Tipo do novo slide'}, ...Object.entries(ESTRUTURAS).map(([v, x]) => el('option', {value:v}, x.nome)));
+  novo.value = 'livre';
+  return el('section', {},
+    el('h2', {}, el('span', {className:'passo'}, '3'), 'Slides'),
+    el('p', {className:'desc'}, 'Escolha o tipo de cada slide e diga o que ele precisa mostrar. O tipo já define o desenho.'),
+    el('div', {className:'ia'},
+      botao('Montar slides com IA', 'faisca', e => montarComIA(e.currentTarget), 'btn primary'),
+      botao('Configurar IA', 'chave', abrirIA),
+      el('span', {className:'dica'}, 'Opcional. O Claude monta os slides a partir do passo 1, com a sua chave da API.')),
+    lista,
+    el('div', {className:'add-slide'}, novo, botao('Adicionar slide', 'mais', () => {
+      estado.slides.push(NOVO_SLIDE(novo.value)); novoIdx = estado.slides.length - 1; desenhar(); mudou();
+      lista.lastChild.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center'});
+      lista.lastChild.querySelector('textarea').focus({preventScroll:true});
+    }, 'btn primary')));
+}
+
+function secaoVisual(){
+  const v = estado.visual;
+  const info = el('div', {className:'tpl-info'});
+  const selTpl = el('select', {ariaLabel:'Template salvo'});
+  const entrada = el('input', {type:'file', accept:'.pptx,.potx,.pptm,.potm', hidden:true});
+  const tplBox = el('div', {className:'tpl'},
+    el('div', {className:'tpl-acoes'}, selTpl,
+      botao('Enviar template (.pptx ou .potx)', 'subir', () => entrada.click(), 'btn primary'),
+      botao('Remover template', 'lixo', () => {
+        if (!v.template || !confirm(`Remover o template "${v.template}" deste navegador?`)) return;
+        delete templates[v.template]; gravar(K_TPL, templates); v.template = Object.keys(templates)[0] || ''; atualizarTpl(); mudou(); }, 'btn perigo'), entrada),
+    info);
+  function atualizarTpl(){
+    const nomes = Object.keys(templates).sort();
+    selTpl.replaceChildren(...(nomes.length ? nomes.map(n => el('option', {value:n}, n)) : [el('option', {value:''}, 'Nenhum template enviado')]));
+    selTpl.value = v.template; selTpl.disabled = !nomes.length;
+    const t = tplAtual();
+    info.replaceChildren(...(t ? [
+      el('div', {className:'cores'}, ...t.cores.map(c => el('span', {title:`${c.papel} ${c.hex}`, style:`background:${c.hex}`}))),
+      el('div', {}, `Fontes: ${t.fontes.titulo || '—'} (títulos), ${t.fontes.texto || '—'} (texto). ${t.tamanho ? 'Tamanho: ' + t.tamanho + '.' : ''}`),
+      el('div', {className:'dica'}, `${t.layouts.length} layouts: ${t.layouts.join(', ')}`)
+    ] : [el('span', {className:'dica'}, 'Envie o template da empresa para usar as cores, as fontes e os layouts dele.')]));
+    tplBox.hidden = v.modo !== 'template';
+    atualizarPal();
+    secaoSlides.redesenhar?.();
+  }
+  selTpl.onchange = () => { v.template = selTpl.value; atualizarTpl(); mudou(); };
+  entrada.onchange = async () => {
+    const f = entrada.files[0]; entrada.value = '';
+    if (!f) return;
+    try {
+      const t = await lerTemplate(await f.arrayBuffer(), f.name);
+      templates[t.nome] = t;
+      if (!gravar(K_TPL, templates)) avisar('Template lido, mas não foi possível salvar neste navegador.');
+      v.template = t.nome; atualizarTpl(); mudou();
+      avisar(`Template "${t.nome}" lido: ${t.layouts.length} layouts e ${t.cores.length} cores.`);
+    } catch (e) { alert('Não foi possível ler o template. ' + (e.message || '') + ' Envie um arquivo .pptx ou .potx salvo pelo PowerPoint.'); }
+  };
+  const palBox = el('div', {className:'tpl'});
+  const cor = (rot, k) => {
+    const id = 'f' + (++uid), i = el('input', {type:'color', id, value: v[k] || '#000000'});
+    i.oninput = () => { v[k] = i.value.toUpperCase(); mudou(); };
+    i.onchange = () => atualizarPal();
+    return el('div', {className:'campo'}, el('label', {htmlFor:id}, rot), i);
+  };
+  function atualizarPal(){
+    palBox.hidden = v.modo !== 'padrao';
+    palBox.replaceChildren(
+      el('div', {className:'paletas', role:'radiogroup', ariaLabel:'Estilo de cores'}, ...Object.entries(PALETAS).map(([k, p]) =>
+        el('label', {className:'paleta'},
+          el('input', {type:'radio', name:'paleta', value:k, checked: v.paleta === k, onchange:() => { v.paleta = k; atualizarPal(); mudou(); }}),
+          el('span', {className:'amostra'}, ...(k === 'personalizada' ? [v.cor1, v.cor2] : [p.fundo, p.estrutural, p.destaque, ...p.apoio.slice(0, 2)]).map(c => el('i', {style:`background:${c}`}))),
+          el('b', {}, p.nome), el('span', {className:'dica'}, p.desc)))),
+      v.paleta === 'personalizada' ? el('div', {className:'linha3', style:'grid-template-columns:1fr 1fr 1fr'},
+        cor('Cor principal', 'cor1'), cor('Cor de destaque', 'cor2'), campo('Fonte', v, 'fonte', {ph:'Ex.: Montserrat'})) : null);
+  }
+  const modo = (val, titulo, desc) => {
+    const r = el('input', {type:'radio', name:'modo', value:val, checked: v.modo === val, onchange:() => { v.modo = val; atualizarTpl(); mudou(); }});
+    return el('label', {className:'modo'}, r, el('span', {}, el('b', {}, titulo), el('span', {className:'dica'}, desc)));
+  };
+  const box = el('section', {},
+    el('h2', {}, el('span', {className:'passo'}, '4'), 'Visual'),
+    el('p', {className:'desc'}, 'O padrão executivo já vem pronto. Escolha as cores e, se tiver, o template da empresa.'),
+    el('div', {className:'modos'},
+      modo('padrao', 'Estilo pronto', 'Paletas profissionais ou as cores da sua empresa.'),
+      modo('template', 'Template da empresa', 'Usa as cores, as fontes e os layouts do seu .pptx.')),
+    palBox, tplBox);
+  atualizarTpl();
+  return box;
+}
+
+function secaoOpcoes(){
+  const o = estado.opcoes, m = estado.meta;
+  const OP = [
+    ['naoInventar', 'Não inventar números', 'Usa só os dados informados e separa realizado de potencial.'],
+    ['tituloConclusao', 'Títulos com a conclusão', 'Cada título antecipa a mensagem do slide.'],
+    ['rodape', 'Rodapé', 'Classificação, nome da empresa e numeração.'],
+    ['notas', 'Notas do apresentador', 'O que falar em cada slide.'],
+    ['checklist', 'Checklist de qualidade', 'A IA confere o arquivo antes de entregar.']
+  ];
+  return el('section', {},
+    el('h2', {}, el('span', {className:'passo'}, '5'), 'Opções'),
+    el('div', {className:'opcoes'}, ...OP.map(([k, t, d]) =>
+      el('label', {}, el('input', {type:'checkbox', checked: !!o[k], onchange: e => { o[k] = e.target.checked; mudou(); }}), el('span', {}, el('b', {}, t), el('span', {className:'dica'}, d))))),
+    campo('Nome do arquivo', m, 'arquivo', {ph:'Opcional: vazio, usa o título e a data'}),
+    campo('Instruções adicionais', m, 'extras', {tipo:'area', rows:2, mic:true, ph:'Opcional: qualquer pedido extra para a IA.'}));
+}
+
+// Ilustrações dos exemplos (traço simples, cor do tema)
+const ILUSTRA = {
+  grafico:'<path d="M4 42h56"/><rect class="f" x="9" y="26" width="9" height="16"/><rect class="f" x="23" y="14" width="9" height="28"/><rect class="f" x="37" y="20" width="9" height="22"/><path d="M10 18l17-10 14 6 15-9M50 5h6v6"/>',
+  projeto:'<rect class="f" x="16" y="8" width="32" height="36" rx="3"/><path d="M26 5h12v6H26zM22 22l4 4 8-8M22 34h20"/>',
+  produto:'<path class="f" d="M32 4l22 10v22L32 46 10 36V14z"/><path d="M10 14l22 10 22-10M32 24v22M21 9l22 10"/>',
+  status:'<circle class="f" cx="32" cy="25" r="19"/><path d="M32 13v12l9 5M20 47h24"/>'
+};
+function secaoExemplos(){
+  const atual = document.getElementById('produto').value;
+  return el('section', {className:'galeria'},
+    el('h2', {}, 'Comece por um exemplo'),
+    el('p', {className:'desc'}, 'Clique num cartão para carregar um exemplo pronto. Depois troque pelo seu conteúdo e preencha os itens entre colchetes.'),
+    el('div', {className:'cards-ex'}, ...EXEMPLOS.map(x => {
+      const b = el('button', {type:'button', className:'card-ex' + ('ex:' + x.id === atual ? ' ativo' : ''), onclick:() => escolherExemplo(x)});
+      b.innerHTML = `<svg viewBox="0 0 64 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ILUSTRA[x.icone]}</svg>`;
+      b.append(el('span', {}, x.nome));
+      return b;
+    })));
+}
+function escolherExemplo(x){
+  if (!confirm(`Carregar o exemplo "${x.nome}"? O que está na tela será substituído. Salve antes se quiser manter.`)) return;
+  gravar(K_SEL, 'ex:' + x.id); montarProdutos('ex:' + x.id); carregar(x.estado);
+  avisar(`Exemplo "${x.nome}" carregado`);
+}
+
+function montarForm(){
+  estado.planilhas = Array.isArray(estado.planilhas) ? estado.planilhas : [];
+  estado.meta = {empresa:'', classificacao:'', destino:'copilot', ...estado.meta};
+  estado.visual = {...VISUAL_INICIAL, ...estado.visual};
+  document.getElementById('form').replaceChildren(secaoExemplos(), secaoSobre(), secaoPlanilhas(), secaoSlides(), secaoVisual(), secaoOpcoes());
+}
+
+// ---------- Pré-visualização ----------
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let texto = '';
+function atualizar(){
+  texto = buildPrompt(estado, tplAtual());
+  document.getElementById('saida').innerHTML = esc(texto).split('\n').map(l =>
+    /^SLIDE \d+ – /.test(l) ? `<b class="sl">${l}</b>` :
+    (l.length > 2 && l === l.toUpperCase() && /[A-ZÀ-Ú]/.test(l) && !/^[-\d“]/.test(l)) || /^(Composição|Título|Conteúdo|Layout do template|Imagens|Gráficos):$/.test(l) ? `<b>${l}</b>` : l).join('\n');
+  const faltam = (texto.match(/\[[^\]\n]{1,60}\]/g) || []).length, pend = document.getElementById('pendentes');
+  pend.hidden = !faltam; pend.textContent = `Preencha ${faltam} ${faltam === 1 ? 'item' : 'itens'} entre colchetes`;
+  const c = document.getElementById('contagem');
+  c.textContent = `${estado.slides.length} slides · ${texto.length.toLocaleString('pt-BR')} caracteres`;
+  c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+}
+let tempo, avisouFalha = false;
+function mudou(){ atualizar(); clearTimeout(tempo); tempo = setTimeout(() => {
+  if (gravar(K_ATUAL, estado) || avisouFalha) return;
+  avisouFalha = true; avisar('Não foi possível salvar neste navegador. Use Exportar para não perder o trabalho.');
+}, 300); }
+
+// ---------- Apresentações salvas, importar e exportar ----------
+function montarProdutos(sel){
+  const s = document.getElementById('produto'), nomes = Object.keys(produtos).sort();
+  s.replaceChildren(el('optgroup', {label:'Exemplos'}, ...EXEMPLOS.map(x => el('option', {value:'ex:' + x.id}, x.nome))),
+    nomes.length ? el('optgroup', {label:'Minhas apresentações'}, ...nomes.map(n => el('option', {value:n}, n))) : null);
+  const alvo = sel ?? ler(K_SEL, PRIMEIRO);
+  s.value = (alvo in produtos || exemploDe(alvo)) ? alvo : PRIMEIRO;
+}
+function carregar(obj){ if (rec) rec.stop(); estado = clone(obj); montarForm(); mudou(); }
+
+document.getElementById('produto').onchange = e => {
+  const n = e.target.value;
+  if (!confirm('Carregar esta apresentação? O que está na tela será substituído. Salve antes se quiser manter.')) { montarProdutos(); return; }
+  gravar(K_SEL, n);
+  carregar(ehExemplo(n) ? exemploDe(n).estado : produtos[n]);
+  avisar('Apresentação carregada');
+};
+document.getElementById('bSalvar').onclick = () => {
+  const atual = document.getElementById('produto').value;
+  const n = (prompt('Nome da apresentação:', !ehExemplo(atual) ? atual : '') || '').trim();
+  if (!n) return;
+  if (n in produtos && n !== atual && !confirm(`Já existe "${n}". Substituir?`)) return;
+  produtos[n] = clone(estado); gravar(K_PROD, produtos); gravar(K_SEL, n); montarProdutos(n);
+  avisar(`"${n}" salva neste navegador`);
+};
+document.getElementById('bExcluir').onclick = () => {
+  const n = document.getElementById('produto').value;
+  if (ehExemplo(n)) { avisar('Os exemplos não podem ser excluídos'); return; }
+  if (!confirm(`Excluir "${n}" da lista?`)) return;
+  delete produtos[n]; gravar(K_PROD, produtos); gravar(K_SEL, PRIMEIRO); montarProdutos(PRIMEIRO);
+  avisar('Apresentação excluída');
+};
+function baixar(nome, conteudo, tipo){
+  const a = el('a', {href: URL.createObjectURL(new Blob([conteudo], {type:tipo})), download:nome});
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const nomeBase = () => (estado.meta.titulo || 'prompt').replace(/[\\/:*?"<>|]/g, '').trim() || 'prompt';
+document.getElementById('bExportar').onclick = () => {
+  const t = estado.visual.modo === 'template' ? tplAtual() : null;
+  baixar(nomeBase() + '.json', JSON.stringify(t ? {...estado, _template: t} : estado, null, 2), 'application/json');
+};
+document.getElementById('bImportar').onclick = () => document.getElementById('arquivo').click();
+document.getElementById('arquivo').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const obj = JSON.parse(await f.text());
+    if (!valido(obj)) throw new Error();
+    if (obj._template?.nome) { templates[obj._template.nome] = obj._template; obj.visual.template = obj._template.nome; gravar(K_TPL, templates); }
+    delete obj._template;
+    obj.slides = obj.slides.filter(s => s && typeof s === 'object').map(s => ({...NOVO_SLIDE('livre'), ...s}));
+    carregar(obj); avisar('Arquivo importado. Use "Salvar" para guardar na lista.');
+  } catch { alert('Não foi possível importar: o arquivo não foi exportado por esta ferramenta.'); }
+};
+document.getElementById('bCopiar').onclick = async () => {
+  try { await navigator.clipboard.writeText(texto); avisar('Prompt copiado'); }
+  catch { const s = getSelection(), r = document.createRange(); r.selectNodeContents(document.getElementById('saida')); s.removeAllRanges(); s.addRange(r); avisar('Texto selecionado. Use Ctrl+C para copiar.'); }
+};
+document.getElementById('bBaixar').onclick = () => baixar(nomeBase() + ' - prompt.txt', texto, 'text/plain;charset=utf-8');
+document.getElementById('bManual').onclick = () => document.getElementById('manual').showModal();
+document.getElementById('bFechar').onclick = () => document.getElementById('manual').close();
+
+// ---------- Assistente de IA (Claude, chave do próprio usuário; chamada direta do navegador) ----------
+const iaCfg = () => ({chave:'', modelo:'claude-opus-5-5', ...ler(K_IA, {})});
+function abrirIA(){
+  const c = iaCfg();
+  document.getElementById('iaChave').value = c.chave; document.getElementById('iaModelo').value = c.modelo;
+  document.getElementById('dlgIA').showModal();
+}
+document.getElementById('dlgIA').addEventListener('close', e => {
+  if (e.target.returnValue === 'salvar') {
+    gravar(K_IA, {chave: document.getElementById('iaChave').value.trim(), modelo: document.getElementById('iaModelo').value});
+    avisar('Configuração da IA salva neste navegador');
+  } else if (e.target.returnValue === 'apagar') { try { localStorage.removeItem(K_IA); } catch {} avisar('Chave apagada deste navegador'); }
+});
+async function montarComIA(btn){
+  const c = iaCfg();
+  if (!has(c.chave)) { abrirIA(); return; }
+  if (!has(estado.meta.titulo) && !has(estado.meta.contexto)) { avisar('Preencha pelo menos o título e o contexto no passo 1.'); return; }
+  if (!confirm('A IA vai montar os slides a partir do passo 1 (e do rascunho atual) e substituir os slides que estão na tela. Continuar?')) return;
+  const rot = btn.lastChild.textContent; btn.disabled = true; btn.lastChild.textContent = 'Montando os slides…';
+  try {
+    const corpo = pedidoIA(estado, c.modelo), comFallback = c.modelo !== 'claude-haiku-5-5';
+    const r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST',
+      headers: {'content-type':'application/json', 'x-api-key':c.chave, 'anthropic-version':'2026-10-21', 'anthropic-dangerous-direct-browser-access':'true',
+                ...(comFallback ? {'anthropic-beta':'server-side-fallback-2026-07-01'} : {})},
+      body: JSON.stringify(comFallback ? {...corpo, fallbacks:'default'} : corpo)});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 401 ? 'A chave da API não foi aceita. Confira em "Configurar IA".'
+      : r.status === 429 ? 'Limite de uso atingido. Espere um pouco e tente de novo.' : (j.error?.message || 'Erro ' + r.status + '.'));
+    if (j.stop_reason === 'refusal') throw new Error('A IA recusou o pedido. Revise o contexto e tente de novo.');
+    if (j.stop_reason === 'max_tokens') throw new Error('A resposta ficou longa demais. Resuma o contexto e tente de novo.');
+    estado.slides = slidesDaIA(JSON.parse((j.content || []).find(b => b.type === 'text')?.text || '{}'));
+    secaoSlides.redesenhar(); mudou();
+    avisar(`${estado.slides.length} slides montados. Revise e ajuste o que quiser.`);
+  } catch (e) { alert('Não foi possível montar os slides com IA. ' + (e instanceof TypeError ? 'Sem conexão com a API.' : e.message || '')); }
+  finally { btn.disabled = false; btn.lastChild.textContent = rot; }
+}
+
+// ---------- Rascunho .pptx com gráficos nativos (PptxGenJS, carregado só quando usado) ----------
+let libPptx;
+const carregarPptx = () => libPptx ||= new Promise((ok, erro) => document.head.append(el('script', {
+  src:'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
+  onload:() => ok(window.PptxGenJS), onerror:() => { libPptx = null; erro(new Error('Não foi possível carregar o gerador de .pptx. Confira a internet.')); }})));
+const hex = c => String(c || '').replace('#', '').toUpperCase();
+const escuro = c => { const n = parseInt(hex(c), 16); return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 < 140; };
+async function baixarPptx(btn){
+  btn.disabled = true;
+  try {
+    const PptxGenJS = await carregarPptx(), pptx = new PptxGenJS();
+    const tpl = estado.visual.modo === 'template' ? tplAtual() : null, p = paletaDe(estado.visual, tpl), m = estado.meta, o = estado.opcoes;
+    pptx.layout = 'LAYOUT_WIDE'; pptx.title = m.titulo || 'Apresentação';
+    if (has(m.empresa)) pptx.company = m.empresa;
+    const cores = coresSeries(p).map(hex), TIPO = {colunas:'bar', barras:'bar', pizza:'doughnut', linha:'line'};
+    const fundoCapa = escuro(p.fundo) ? p.fundo2 : p.estrutural, corCapa = escuro(fundoCapa) ? 'FFFFFF' : hex(p.texto);
+    let vazios = 0;
+    estado.slides.forEach((sl, i) => {
+      const s = pptx.addSlide(), capa = sl.estrutura === 'capa';
+      const titulo = sl.titulo || (capa ? m.titulo : '') || (ESTRUTURAS[sl.estrutura] || ESTRUTURAS.livre).nome;
+      s.background = {color: hex(capa ? fundoCapa : p.fundo)};
+      if (capa) {
+        s.addShape(pptx.ShapeType.rect, {x:0.7, y:2.3, w:0.12, h:2.1, fill:{color: hex(p.destaque)}, line:{color: hex(p.destaque)}});
+        s.addText(titulo, {x:1.05, y:1.9, w:11.4, h:1.7, fontFace:p.fonteT, fontSize:44, bold:true, color:corCapa, valign:'bottom', fit:'shrink'});
+        s.addText([m.empresa, m.area, m.data].filter(has).join('  ·  ') || ' ', {x:1.05, y:3.75, w:11.4, h:0.6, fontFace:p.fonteC, fontSize:18, color:corCapa});
+      } else {
+        s.addText(titulo, {x:0.6, y:0.4, w:12.1, h:0.9, fontFace:p.fonteT, fontSize:28, bold:true, color:hex(p.estrutural), valign:'middle', fit:'shrink'});
+        s.addShape(pptx.ShapeType.line, {x:0.6, y:1.35, w:12.1, h:0, line:{color: hex(p.linha), width:1}});
+        const gs = (sl.graficos || []).map(g => dadosGraf(g, estado.planilhas)).filter(Boolean), texto = has(sl.conteudo);
+        if (texto) s.addText(sl.conteudo, {x:0.6, y:1.6, w: gs.length ? 4.3 : 12.1, h:5.2, fontFace:p.fonteC, fontSize:14, color:hex(p.texto), valign:'top', fit:'shrink', paraSpaceAfter:6});
+        gs.forEach((d, k) => {
+          const h = 5.2 / gs.length, fmt = d.pct ? '0%' : '#,##0.##';
+          vazios += d.vazios;
+          s.addChart(TIPO[d.tipo], d.series.map(x => ({...x, values: x.values.map(v => v ?? 0)})), {
+            x: texto ? 5.2 : 0.6, y: 1.6 + k * h, w: texto ? 7.5 : 12.1, h: h - 0.15, barDir: d.tipo === 'barras' ? 'bar' : 'col', barGapWidthPct: 60, holeSize: 55,
+            chartColors: cores, showValue: d.tipo !== 'pizza', showPercent: d.tipo === 'pizza', showLegend: d.tipo === 'pizza' || d.series.length > 1, legendPos:'b',
+            showTitle: has(d.titulo), title: d.titulo, titleFontFace: p.fonteC, titleFontSize: 13, titleColor: hex(p.texto),
+            dataLabelFormatCode: fmt, valAxisLabelFormatCode: d.pct ? '0%' : '#,##0', dataLabelPosition: d.tipo === 'linha' ? 't' : undefined,
+            catAxisLabelFontFace: p.fonteC, valAxisLabelFontFace: p.fonteC, dataLabelFontFace: p.fonteC, legendFontFace: p.fonteC,
+            catAxisLabelColor: hex(p.texto2), valAxisLabelColor: hex(p.texto2), dataLabelColor: hex(p.texto), legendColor: hex(p.texto2),
+            catAxisLabelFontSize: 11, valAxisLabelFontSize: 10, dataLabelFontSize: 10, legendFontSize: 11,
+            valGridLine: {color: hex(p.linha), size: 0.5}, catGridLine: {style:'none'}, lineDataSymbol:'circle', lineDataSymbolSize: 7, lineSize: 2.5});
+        });
+      }
+      if (o.rodape) s.addText([m.classificacao, m.empresa, String(i + 1)].filter(has).join('   |   '),
+        {x:0.6, y:7.0, w:12.1, h:0.3, fontFace:p.fonteC, fontSize:9, color: capa ? corCapa : hex(p.texto2), align:'right'});
+      if (o.notas && has(sl.conteudo)) s.addNotes(sl.conteudo);
+    });
+    await pptx.writeFile({fileName: nomeArquivo(m).replace(/\.pptx$/i, '') + ' - rascunho.pptx'});
+    avisar(vazios ? `Rascunho baixado. ${vazios} ${vazios === 1 ? 'valor sem número entrou' : 'valores sem número (como [X]) entraram'} como zero.` : 'Rascunho baixado com os gráficos editáveis.');
+  } catch (e) { alert('Não foi possível gerar o rascunho. ' + (e.message || '')); }
+  finally { btn.disabled = false; }
+}
+document.getElementById('bPptx').onclick = e => baixarPptx(e.currentTarget);
+
+montarProdutos();
+montarForm();
+atualizar();
+</script>
+</body>
+</html>
